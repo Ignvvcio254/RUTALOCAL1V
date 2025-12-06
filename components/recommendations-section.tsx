@@ -1,5 +1,6 @@
 import { Sparkles, ArrowRight } from "lucide-react"
 import { NegocioCard } from "./negocio-card"
+import Link from "next/link"
 
 const businessCards = [
   {
@@ -59,13 +60,13 @@ export function RecommendationsSection() {
             <Sparkles size={14} className="text-indigo-600" />
             <span className="text-xs font-medium text-indigo-600">Powered by AI</span>
           </div>
-          <a
-            href="#"
+          <Link
+            href="/recommendations"
             className="flex items-center gap-1 text-sm font-semibold text-indigo-600 transition-colors hover:text-purple-600"
           >
             Ver todas
             <ArrowRight size={14} />
-          </a>
+          </Link>
         </div>
       </div>
 
