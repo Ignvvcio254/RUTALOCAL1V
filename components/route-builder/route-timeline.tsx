@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { useDroppable } from "@dnd-kit/core"
+import { useDroppable, type DragEndEvent } from "@dnd-kit/core"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
@@ -132,7 +132,7 @@ function SortableRouteItem({
             {/* Duration Selector */}
             <div className="mt-4 flex items-center gap-3">
               <Clock size={16} className="text-gray-500" />
-              <Select value={item.duration} onValueChange={(val: any) => onUpdateDuration(item.id, val)}>
+              <Select value={item.duration} onValueChange={(val) => onUpdateDuration(item.id, val as RouteItem["duration"])}>
                 <SelectTrigger className="w-32 h-9">
                   <SelectValue />
                 </SelectTrigger>
@@ -206,7 +206,7 @@ export function RouteTimeline({
     setShowAISuggestions(false)
   }
 
-  const handleDragEnd = (e: any) => {
+  const handleDragEnd = (e: DragEndEvent) => {
     const { active, over } = e
     if (active.id !== over?.id) {
       const oldIndex = items.findIndex((item) => item.id === active.id)

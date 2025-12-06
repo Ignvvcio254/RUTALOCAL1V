@@ -7,7 +7,7 @@ import "leaflet.markercluster/dist/MarkerCluster.css"
 import "leaflet.markercluster/dist/MarkerCluster.Default.css"
 import MarkerClusterGroup from "react-leaflet-cluster"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
-import { MOCK_BUSINESSES } from "@/lib/mock-data"
+import { MOCK_BUSINESSES, type Business } from "@/lib/mock-data"
 
 interface MapComponentProps {
   center: { lat: number; lng: number }
@@ -25,7 +25,7 @@ interface MapComponentProps {
 
 const MapComponent = forwardRef<L.Map, MapComponentProps>(
   ({ center, zoom, selectedBusiness, onSelectBusiness, filters }, ref) => {
-    const [markers, setMarkers] = useState<any[]>([])
+    const [markers, setMarkers] = useState<Business[]>([])
 
     useEffect(() => {
       // Filter businesses based on criteria

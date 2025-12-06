@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   XAxis,
@@ -33,6 +34,39 @@ const reviewData = [
 ]
 
 export function ChartsSection() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-white border-gray-100 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold text-gray-900">Visitas por dia</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[280px] flex items-center justify-center text-gray-400">
+              Cargando gráfico...
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white border-gray-100 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold text-gray-900">Distribucion de resenas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[280px] flex items-center justify-center text-gray-400">
+              Cargando gráfico...
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Visits Chart */}

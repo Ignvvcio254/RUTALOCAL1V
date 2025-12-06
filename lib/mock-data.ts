@@ -1,4 +1,19 @@
-export const MOCK_BUSINESSES = [
+export interface Business {
+  id: string
+  name: string
+  category: string
+  rating: number
+  distance: number
+  image: string
+  isOpen: boolean
+  closesAt: string
+  phone: string
+  lat: number
+  lng: number
+  priceRange: number
+}
+
+export const MOCK_BUSINESSES: Business[] = [
   {
     id: "1",
     name: "Café Histórico",

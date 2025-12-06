@@ -13,15 +13,17 @@ import { ResultsList } from "./results-list"
 import { MOCK_BUSINESSES } from "@/lib/mock-data"
 import { useMediaQuery } from "@/hooks/use-mobile"
 
+export interface MapFilters {
+  category: string
+  distance: number
+  rating: number
+  priceRange: number
+  openNow: boolean
+}
+
 interface MapSidebarProps {
-  filters: {
-    category: string
-    distance: number
-    rating: number
-    priceRange: number
-    openNow: boolean
-  }
-  onFiltersChange: (filters: any) => void
+  filters: MapFilters
+  onFiltersChange: (filters: MapFilters) => void
   selectedBusiness: string | null
   onSelectBusiness: (id: string | null) => void
   isMobile?: boolean

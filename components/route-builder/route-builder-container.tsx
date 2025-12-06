@@ -7,6 +7,7 @@ import { RouteTimeline } from "./route-timeline"
 import { MapPreview } from "./map-preview"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { Business } from "@/lib/mock-data"
 
 export interface RouteItem {
   id: string
@@ -32,7 +33,7 @@ const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: numbe
   return (R * c).toFixed(2)
 }
 
-const calculateTravelTime = (distance: number) => {
+const calculateTravelTime = (distance: string) => {
   const walkingSpeed = 1.4
   const minutes = Math.round((Number.parseFloat(distance) / walkingSpeed) * 60)
   return `${minutes} min walk`
@@ -50,7 +51,7 @@ export function RouteBuilderContainer() {
 
     const draggedData = active.data.current as {
       type: string
-      business: any
+      business: Business
     }
     if (draggedData?.type === "business" && over.id === "drop-zone") {
       const newItem: RouteItem = {
