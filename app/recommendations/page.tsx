@@ -3,16 +3,17 @@
 import { useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { NegocioCard } from "@/components/negocio-card"
+import { BusinessDetailModal, type BusinessDetail } from "@/components/business-detail-modal"
 import { Button } from "@/components/ui/button"
 import { Sparkles, SlidersHorizontal, MapPin } from "lucide-react"
 import Link from "next/link"
 
-// Datos de negocios expandidos (incluye los 3 originales + más)
-const allBusinessCards = [
+// Datos de negocios expandidos con información completa para el modal
+const allBusinessCards: BusinessDetail[] = [
   {
     id: "1",
     name: "Café Vinilo",
-    category: "CAFÉ" as const,
+    category: "CAFÉ",
     rating: 4.8,
     reviews: 127,
     distance: "800m de ti",
@@ -20,11 +21,18 @@ const allBusinessCards = [
     priceRange: 2,
     isOpen: true,
     image: "/cozy-coffee-shop-with-vinyl-records.jpg",
+    phone: "+56 2 2345 6789",
+    address: "Av. Providencia 1234, Providencia, Santiago",
+    openHours: { open: "08:00", close: "20:00" },
+    features: ["WiFi", "Pet-friendly", "Terraza"],
+    lat: -33.4260,
+    lng: -70.6100,
+    aboutText: "Café Vinilo es un espacio único que combina la pasión por el café de especialidad con la nostalgia de los vinilos vintage. Cada taza es preparada con dedicación y cada disco cuenta una historia."
   },
   {
     id: "2",
     name: "Taller Cerámica Local",
-    category: "ARTE" as const,
+    category: "ARTE",
     rating: 4.9,
     reviews: 89,
     distance: "1.2km de ti",
@@ -32,11 +40,18 @@ const allBusinessCards = [
     priceRange: 3,
     isOpen: true,
     image: "/pottery-ceramic-art-studio-workshop.jpg",
+    phone: "+56 2 2456 7890",
+    address: "Lastarria 180, Santiago Centro",
+    openHours: { open: "10:00", close: "19:00" },
+    features: ["WiFi", "Clases grupales"],
+    lat: -33.4372,
+    lng: -70.6386,
+    aboutText: "Taller de cerámica donde artesanos locales comparten su conocimiento. Ofrecemos clases personalizadas y espacios para crear tus propias piezas únicas."
   },
   {
     id: "3",
     name: "Tour Barrio Italia",
-    category: "TOUR" as const,
+    category: "TOUR",
     rating: 5.0,
     reviews: 156,
     distance: "Desde aquí",
@@ -44,11 +59,15 @@ const allBusinessCards = [
     priceRange: 2,
     isOpen: true,
     image: "/guided-city-tour-barrio-buildings.jpg",
+    phone: "+56 2 2567 8901",
+    address: "Condell 1234, Providencia",
+    lat: -33.4450,
+    lng: -70.6280,
   },
   {
     id: "4",
     name: "Librería Metales Pesados",
-    category: "LIBRERÍA" as const,
+    category: "LIBRERÍA",
     rating: 4.7,
     reviews: 94,
     distance: "600m de ti",
@@ -56,11 +75,15 @@ const allBusinessCards = [
     priceRange: 2,
     isOpen: true,
     image: "/cozy-coffee-shop-with-vinyl-records.jpg",
+    phone: "+56 2 2678 9012",
+    address: "Lastarria 305, Santiago Centro",
+    lat: -33.4375,
+    lng: -70.6388,
   },
   {
     id: "5",
     name: "Hostal Providencia",
-    category: "HOSTAL" as const,
+    category: "HOSTAL",
     rating: 4.6,
     reviews: 203,
     distance: "1.5km de ti",
@@ -68,11 +91,15 @@ const allBusinessCards = [
     priceRange: 2,
     isOpen: true,
     image: "/pottery-ceramic-art-studio-workshop.jpg",
+    phone: "+56 2 2789 0123",
+    address: "Av. Providencia 2000, Providencia",
+    lat: -33.4270,
+    lng: -70.6110,
   },
   {
     id: "6",
     name: "Restaurante Boragó",
-    category: "RESTAURANTE" as const,
+    category: "RESTAURANTE",
     rating: 4.9,
     reviews: 312,
     distance: "2km de ti",
@@ -80,11 +107,15 @@ const allBusinessCards = [
     priceRange: 3,
     isOpen: true,
     image: "/guided-city-tour-barrio-buildings.jpg",
+    phone: "+56 2 2890 1234",
+    address: "Nueva Costanera 3467, Vitacura",
+    lat: -33.3950,
+    lng: -70.5850,
   },
   {
     id: "7",
     name: "Bar La Piojera",
-    category: "BAR" as const,
+    category: "BAR",
     rating: 4.4,
     reviews: 287,
     distance: "900m de ti",
@@ -92,11 +123,15 @@ const allBusinessCards = [
     priceRange: 1,
     isOpen: true,
     image: "/cozy-coffee-shop-with-vinyl-records.jpg",
+    phone: "+56 2 2901 2345",
+    address: "Aillavilú 1030, Santiago Centro",
+    lat: -33.4410,
+    lng: -70.6580,
   },
   {
     id: "8",
     name: "Galería Gabriela Mistral",
-    category: "GALERÍA" as const,
+    category: "GALERÍA",
     rating: 4.8,
     reviews: 145,
     distance: "1.1km de ti",
@@ -104,11 +139,15 @@ const allBusinessCards = [
     priceRange: 1,
     isOpen: true,
     image: "/pottery-ceramic-art-studio-workshop.jpg",
+    phone: "+56 2 3012 3456",
+    address: "Av. Libertador Bernardo O'Higgins 227",
+    lat: -33.4420,
+    lng: -70.6520,
   },
   {
     id: "9",
     name: "Panadería Lo Valledor",
-    category: "PANADERÍA" as const,
+    category: "PANADERÍA",
     rating: 4.7,
     reviews: 178,
     distance: "700m de ti",
@@ -116,11 +155,15 @@ const allBusinessCards = [
     priceRange: 1,
     isOpen: true,
     image: "/guided-city-tour-barrio-buildings.jpg",
+    phone: "+56 2 3123 4567",
+    address: "Av. Perú 1050, Santiago Centro",
+    lat: -33.4430,
+    lng: -70.6610,
   },
   {
     id: "10",
     name: "Mercado Central",
-    category: "MERCADO" as const,
+    category: "MERCADO",
     rating: 4.6,
     reviews: 423,
     distance: "1.8km de ti",
@@ -128,11 +171,15 @@ const allBusinessCards = [
     priceRange: 2,
     isOpen: true,
     image: "/cozy-coffee-shop-with-vinyl-records.jpg",
+    phone: "+56 2 3234 5678",
+    address: "San Pablo 967, Santiago Centro",
+    lat: -33.4370,
+    lng: -70.6495,
   },
   {
     id: "11",
     name: "Café con Libros",
-    category: "CAFÉ" as const,
+    category: "CAFÉ",
     rating: 4.8,
     reviews: 156,
     distance: "500m de ti",
@@ -140,11 +187,15 @@ const allBusinessCards = [
     priceRange: 2,
     isOpen: true,
     image: "/pottery-ceramic-art-studio-workshop.jpg",
+    phone: "+56 2 3345 6789",
+    address: "Merced 336, Lastarria",
+    lat: -33.4378,
+    lng: -70.6395,
   },
   {
     id: "12",
     name: "Tour Cerro San Cristóbal",
-    category: "TOUR" as const,
+    category: "TOUR",
     rating: 4.9,
     reviews: 267,
     distance: "2.2km de ti",
@@ -152,6 +203,10 @@ const allBusinessCards = [
     priceRange: 2,
     isOpen: true,
     image: "/guided-city-tour-barrio-buildings.jpg",
+    phone: "+56 2 3456 7890",
+    address: "Pío Nono 445, Bellavista",
+    lat: -33.4291,
+    lng: -70.6390,
   },
 ]
 
@@ -159,6 +214,19 @@ const categories = ["Todos", "CAFÉ", "ARTE", "TOUR", "LIBRERÍA", "HOSTAL", "RE
 
 export default function RecommendationsPage() {
   const [selectedCategory, setSelectedCategory] = useState("Todos")
+  const [selectedBusiness, setSelectedBusiness] = useState<BusinessDetail | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const handleBusinessClick = (business: BusinessDetail) => {
+    setSelectedBusiness(business)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    // Delay clearing the business to allow exit animation
+    setTimeout(() => setSelectedBusiness(null), 300)
+  }
 
   const filteredBusinesses = selectedCategory === "Todos"
     ? allBusinessCards
@@ -277,7 +345,7 @@ export default function RecommendationsPage() {
                   animationFillMode: 'backwards',
                 }}
               >
-                <NegocioCard {...card} />
+                <NegocioCard {...card} onClick={() => handleBusinessClick(card)} />
               </div>
             ))}
           </div>
@@ -294,6 +362,13 @@ export default function RecommendationsPage() {
           )}
         </div>
       </section>
+
+      {/* Business Detail Modal */}
+      <BusinessDetailModal
+        business={selectedBusiness}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </main>
   )
 }

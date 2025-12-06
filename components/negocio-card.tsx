@@ -14,6 +14,7 @@ interface NegocioCardProps {
   priceRange: number
   isOpen: boolean
   image: string
+  onClick?: () => void
 }
 
 const categoryColors: Record<string, { badge: string; bg: string }> = {
@@ -39,12 +40,16 @@ export function NegocioCard({
   priceRange,
   isOpen,
   image,
+  onClick,
 }: NegocioCardProps) {
   const [isFavorited, setIsFavorited] = useState(false)
   const colors = categoryColors[category] || { badge: "bg-gray-500", bg: "/placeholder.svg" }
 
   return (
-    <div className="group cursor-pointer overflow-hidden rounded-lg bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:translate-y-[-8px]">
+    <div 
+      className="group cursor-pointer overflow-hidden rounded-lg bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:translate-y-[-8px]"
+      onClick={onClick}
+    >
       {/* Image Container */}
       <div className="relative aspect-video overflow-hidden rounded-t-lg bg-gray-200">
         <img
