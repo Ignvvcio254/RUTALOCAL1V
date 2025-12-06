@@ -6,7 +6,7 @@ import { useState } from "react"
 interface NegocioCardProps {
   id: string
   name: string
-  category: "CAFÉ" | "ARTE" | "TOUR"
+  category: "CAFÉ" | "ARTE" | "TOUR" | "LIBRERÍA" | "HOSTAL" | "RESTAURANTE" | "BAR" | "GALERÍA" | "PANADERÍA" | "MERCADO"
   rating: number
   reviews: number
   distance: string
@@ -20,6 +20,13 @@ const categoryColors: Record<string, { badge: string; bg: string }> = {
   CAFÉ: { badge: "bg-orange-500", bg: "/cozy-coffee-shop.png" },
   ARTE: { badge: "bg-purple-500", bg: "/art-studio-workshop.jpg" },
   TOUR: { badge: "bg-blue-500", bg: "/guided-city-tour.jpg" },
+  LIBRERÍA: { badge: "bg-indigo-500", bg: "/placeholder.svg" },
+  HOSTAL: { badge: "bg-emerald-500", bg: "/placeholder.svg" },
+  RESTAURANTE: { badge: "bg-red-500", bg: "/placeholder.svg" },
+  BAR: { badge: "bg-amber-600", bg: "/placeholder.svg" },
+  GALERÍA: { badge: "bg-pink-500", bg: "/placeholder.svg" },
+  PANADERÍA: { badge: "bg-yellow-600", bg: "/placeholder.svg" },
+  MERCADO: { badge: "bg-green-600", bg: "/placeholder.svg" },
 }
 
 export function NegocioCard({
@@ -34,7 +41,7 @@ export function NegocioCard({
   image,
 }: NegocioCardProps) {
   const [isFavorited, setIsFavorited] = useState(false)
-  const colors = categoryColors[category]
+  const colors = categoryColors[category] || { badge: "bg-gray-500", bg: "/placeholder.svg" }
 
   return (
     <div className="group cursor-pointer overflow-hidden rounded-lg bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:translate-y-[-8px]">
