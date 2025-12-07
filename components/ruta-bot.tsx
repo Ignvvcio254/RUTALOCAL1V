@@ -84,7 +84,7 @@ export function RutaBot() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 left-6 z-50">
       <AnimatePresence>
         {isOpen ? (
           <motion.div
@@ -93,7 +93,7 @@ export function RutaBot() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
-            className="absolute bottom-0 right-0 w-[400px] h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
+            className="absolute bottom-0 left-0 w-[400px] h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 flex items-center justify-between">
@@ -246,20 +246,37 @@ export function RutaBot() {
       </AnimatePresence>
 
       {/* FAB Button */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative w-14 h-14 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-lg flex items-center justify-center text-white"
-        aria-label="Open chat"
-      >
-        <motion.div
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-          className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full opacity-75"
-        />
-        <MessageCircle className="w-6 h-6 relative z-10" />
-      </motion.button>
+      <div className="relative">
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative w-14 h-14 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full shadow-lg flex items-center justify-center text-white"
+          aria-label="Open chat"
+        >
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full opacity-75"
+          />
+          <MessageCircle className="w-6 h-6 relative z-10" />
+        </motion.button>
+
+        {/* Badge "Online 24/7" */}
+        {!isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="absolute -top-2 left-16 bg-white px-2.5 py-1 rounded-full shadow-md border border-gray-200 whitespace-nowrap"
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <span className="text-xs font-medium text-gray-700">Online 24/7</span>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   )
 }
