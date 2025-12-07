@@ -4,7 +4,7 @@ import { ProfileData } from '../types/profile.types';
 import { globalCache } from '../utils/cache.manager';
 import { mockUser } from '../mock/mock-data';
 
-const USE_MOCK_DATA = process.env.NODE_ENV === 'development';
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_DEV_MODE === 'true' || process.env.NODE_ENV === 'development';
 
 export class UserProfileService {
   private baseUrl: string;

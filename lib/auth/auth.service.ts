@@ -156,7 +156,7 @@ export class AuthService {
           ...mockTokens,
           accessToken: 'mock_access_token_refreshed_' + Date.now(),
         };
-        TokenManager.saveTokens(newTokens, true);
+        await TokenManager.saveTokens(newTokens, true);
         return newTokens;
       }
 
@@ -181,7 +181,7 @@ export class AuthService {
         expiresIn: data.expiresIn || 900,
       };
 
-      TokenManager.saveTokens(tokens, true);
+      await TokenManager.saveTokens(tokens, true);
 
       return tokens;
     })();
