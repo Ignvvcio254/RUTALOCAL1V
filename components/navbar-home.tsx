@@ -122,7 +122,7 @@ export function NavbarHome() {
                 className="flex items-center gap-2 text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-all"
               >
                 <Bot className="w-4 h-4" />
-                <span className="font-medium">RutaBot</span>
+                <span className="font-medium">RutaGo</span>
               </Button>
             </div>
 

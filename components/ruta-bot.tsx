@@ -27,7 +27,7 @@ export function RutaBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "¡Hola! 👋 Soy RutaBot. ¿Qué tipo de experiencia buscas hoy?",
+      text: "¡Hola! 👋 Soy RutaGo. ¿Qué tipo de experiencia buscas hoy?",
       sender: "bot",
       timestamp: new Date(),
     },
@@ -84,7 +84,7 @@ export function RutaBot() {
   }
 
   return (
-    <div className="hidden lg:block fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-24 lg:bottom-6 right-4 lg:right-6 z-[60]">
       <AnimatePresence>
         {isOpen ? (
           <motion.div
@@ -93,7 +93,7 @@ export function RutaBot() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
-            className="absolute bottom-0 right-0 w-[400px] h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
+            className="absolute bottom-0 right-0 w-[calc(100vw-2rem)] lg:w-[400px] h-[calc(100vh-8rem)] lg:h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 flex items-center justify-between">
@@ -102,7 +102,7 @@ export function RutaBot() {
                   <MessageCircle className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold">RutaBot</h3>
+                  <h3 className="text-white font-semibold">RutaGo</h3>
                   <p className="text-indigo-100 text-xs">Tu guía local</p>
                 </div>
               </div>
@@ -245,8 +245,8 @@ export function RutaBot() {
         ) : null}
       </AnimatePresence>
 
-      {/* FAB Button */}
-      <div className="relative">
+      {/* FAB Button - Solo Desktop */}
+      <div className="relative hidden lg:block">
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
