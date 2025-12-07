@@ -8,8 +8,10 @@ Settings → Environment Variables
 IMPORTANTE: Marca todas para Production, Preview y Development
 
 -------------------------------------------
+⚠️ CRÍTICA - Sin esta variable el login con Google fallará
 VARIABLE: NEXT_PUBLIC_DEV_MODE
 VALUE: true
+ENVIRONMENTS: ✅ Production ✅ Preview ✅ Development
 -------------------------------------------
 
 VARIABLE: NEXT_PUBLIC_API_URL
