@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Home, Map, Search, Route, User } from "lucide-react"
+import { Home, Map, Search, Route, MessageCircle } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -21,6 +21,19 @@ export function BottomNav() {
 
   const handleSearchClick = () => {
     setIsSearchOpen(true)
+  }
+
+  const handleChatClick = () => {
+    const rutabot = document.getElementById('rutabot-container')
+    if (rutabot) {
+      rutabot.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setTimeout(() => {
+        const chatButton = rutabot.querySelector('button')
+        if (chatButton) {
+          chatButton.click()
+        }
+      }, 500)
+    }
   }
 
   const navItems: NavItem[] = [
@@ -50,10 +63,11 @@ export function BottomNav() {
       href: '/builder',
     },
     {
-      id: 'profile',
-      label: 'Perfil',
-      icon: User,
-      href: '/profile',
+      id: 'chat',
+      label: 'Chat',
+      icon: MessageCircle,
+      href: '#',
+      action: handleChatClick,
     },
   ]
 

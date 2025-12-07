@@ -84,7 +84,7 @@ export function RutaBot() {
   }
 
   return (
-    <div className="hidden lg:block fixed bottom-6 left-6 z-50">
+    <div className="hidden lg:block fixed bottom-6 right-6 z-50">
       <AnimatePresence>
         {isOpen ? (
           <motion.div
@@ -93,7 +93,7 @@ export function RutaBot() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
-            className="absolute bottom-0 left-0 w-[400px] h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
+            className="absolute bottom-0 right-0 w-[400px] h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 flex items-center justify-between">
@@ -265,10 +265,10 @@ export function RutaBot() {
         {/* Badge "Online 24/7" */}
         {!isOpen && (
           <motion.div
-            initial={{ opacity: 0, x: -10 }}
+            initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            className="absolute -top-2 left-16 bg-white px-2.5 py-1 rounded-full shadow-md border border-gray-200 whitespace-nowrap"
+            className="absolute -top-2 right-16 bg-white px-2.5 py-1 rounded-full shadow-md border border-gray-200 whitespace-nowrap"
           >
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
