@@ -1,6 +1,7 @@
 "use client"
 
-import { Map, Route, Bot, Bell, User, LogOut, MapPin } from "lucide-react"
+import { useState } from "react"
+import { Map, Route, Bot, Bell, User, LogOut, MapPin, Search } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
@@ -14,10 +15,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { SearchModal } from "./search-modal"
 
 export function NavbarHome() {
   const { user, logout, isAuthenticated } = useAuth()
   const router = useRouter()
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   const handleBotClick = () => {
     const rutabot = document.getElementById('rutabot-container')
@@ -34,116 +37,96 @@ export function NavbarHome() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/90 border-b border-gray-200/80 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo + Ubicación */}
-          <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-                <span className="text-white font-bold text-sm">RL</span>
-              </div>
-              <span className="hidden sm:block font-bold text-gray-900 text-lg">Ruta Local</span>
-            </Link>
+    <>
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
-            {/* Selector de Ubicación */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/90 border-b border-gray-200/80 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo + Ubicación */}
+            <div className="flex items-center gap-4">
+              <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
+                  <span className="text-white font-bold text-sm">RL</span>
+                </div>
+                <span className="hidden sm:block font-bold text-gray-900 text-lg">Ruta Local</span>
+              </Link>
+
+              {/* Selector de Ubicación */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hidden md:flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    <span>Providencia</span>
+                    <span className="text-xs">▾</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuLabel>Cambiar ubicación</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>📍 Providencia</DropdownMenuItem>
+                  <DropdownMenuItem>📍 Ñuñoa</DropdownMenuItem>
+                  <DropdownMenuItem>📍 Las Condes</DropdownMenuItem>
+                  <DropdownMenuItem>📍 Santiago Centro</DropdownMenuItem>
+                  <DropdownMenuItem>📍 Bellavista</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-indigo-600">
+                    Usar mi ubicación actual
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Acciones Rápidas Desktop (Centro) */}
+            <div className="hidden lg:flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSearchOpen(true)}
+                className="flex items-center gap-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
+              >
+                <Search className="w-4 h-4" />
+                <span className="font-medium">Buscar</span>
+              </Button>
+
+              <Link href="/map-interactive">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hidden md:flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
                 >
-                  <MapPin className="w-4 h-4" />
-                  <span>Providencia</span>
-                  <span className="text-xs">▾</span>
+                  <Map className="w-4 h-4" />
+                  <span className="font-medium">Mapa</span>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuLabel>Cambiar ubicación</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>📍 Providencia</DropdownMenuItem>
-                <DropdownMenuItem>📍 Ñuñoa</DropdownMenuItem>
-                <DropdownMenuItem>📍 Las Condes</DropdownMenuItem>
-                <DropdownMenuItem>📍 Santiago Centro</DropdownMenuItem>
-                <DropdownMenuItem>📍 Bellavista</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-indigo-600">
-                  Usar mi ubicación actual
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              </Link>
 
-          {/* Acciones Rápidas (Centro) */}
-          <div className="hidden lg:flex items-center gap-2">
-            <Link href="/map-interactive">
+              <Link href="/builder">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-2 text-gray-700 hover:text-purple-600 hover:bg-purple-50 transition-all"
+                >
+                  <Route className="w-4 h-4" />
+                  <span className="font-medium">Crear Ruta</span>
+                </Button>
+              </Link>
+
               <Button
                 variant="ghost"
                 size="sm"
-                className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                onClick={handleBotClick}
+                className="flex items-center gap-2 text-gray-700 hover:text-orange-600 hover:bg-orange-50 transition-all"
               >
-                <Map className="w-4 h-4" />
-                <span className="font-medium">Mapa</span>
+                <Bot className="w-4 h-4" />
+                <span className="font-medium">RutaBot</span>
               </Button>
-            </Link>
+            </div>
 
-            <Link href="/builder">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center gap-2 text-gray-700 hover:text-purple-600 hover:bg-purple-50 transition-all"
-              >
-                <Route className="w-4 h-4" />
-                <span className="font-medium">Crear Ruta</span>
-              </Button>
-            </Link>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBotClick}
-              className="flex items-center gap-2 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
-            >
-              <Bot className="w-4 h-4" />
-              <span className="font-medium">RutaBot</span>
-            </Button>
-          </div>
-
-          {/* Acciones Rápidas Mobile (Solo iconos) */}
-          <div className="flex lg:hidden items-center gap-1">
-            <Link href="/map-interactive">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
-                title="Ver Mapa"
-              >
-                <Map className="w-5 h-5" />
-              </Button>
-            </Link>
-
-            <Link href="/builder">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-                title="Crear Ruta"
-              >
-                <Route className="w-5 h-5" />
-              </Button>
-            </Link>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBotClick}
-              className="p-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50"
-              title="RutaBot IA"
-            >
-              <Bot className="w-5 h-5" />
-            </Button>
-          </div>
+            {/* Mobile: Sin botones de acciones rápidas */}
 
           {/* Iconos de Usuario (Derecha) */}
           <div className="flex items-center gap-3">
@@ -204,5 +187,6 @@ export function NavbarHome() {
         </div>
       </div>
     </nav>
+    </>
   )
 }

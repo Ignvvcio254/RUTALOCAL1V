@@ -25,7 +25,7 @@ export function BusinessFeed() {
 
   return (
     <section className="px-4 sm:px-6 lg:px-8 py-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6 flex items-start justify-between">
           <div>

@@ -6,12 +6,13 @@ import { ExperienceFilter } from "@/components/filters/experience-filter"
 import { AttributeFilter } from "@/components/filters/attribute-filter"
 import { BusinessFeed } from "@/components/business-feed"
 import { RutaBot } from "@/components/ruta-bot"
+import { BottomNav } from "@/components/bottom-nav"
 import { FilterProvider } from "@/contexts/filter-context"
 
 export default function Home() {
   return (
     <FilterProvider>
-      <main className="min-h-screen bg-gray-50">
+      <main className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
         {/* Navbar Sticky */}
         <NavbarHome />
 
@@ -25,10 +26,13 @@ export default function Home() {
         {/* Feed de Negocios */}
         <BusinessFeed />
 
-        {/* RutaBot Flotante (abajo izquierda) */}
+        {/* RutaBot Flotante (solo desktop) */}
         <div id="rutabot-container">
           <RutaBot />
         </div>
+
+        {/* Bottom Navigation (solo mobile) */}
+        <BottomNav />
       </main>
     </FilterProvider>
   )

@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { MapSearchBar, type SearchFilters } from '@/components/map/map-search-bar'
 import { BusinessCarousel } from '@/components/map/business-carousel'
 import { MAP_BUSINESSES, type MapBusiness } from '@/lib/mapbox-data'
+import { BottomNav } from '@/components/bottom-nav'
 
 // Import Mapbox dynamically to avoid SSR issues
 const MapboxMap = dynamic(
@@ -98,7 +99,7 @@ export default function InteractiveMapPage() {
   }
 
   return (
-    <div className="relative w-full h-screen">
+    <div className="relative w-full h-screen pb-20 lg:pb-0">
       {/* Search Bar */}
       <MapSearchBar filters={filters} onFiltersChange={setFilters} />
 
@@ -115,6 +116,9 @@ export default function InteractiveMapPage() {
         selectedBusinessId={selectedBusinessId}
         onBusinessSelect={handleBusinessSelect}
       />
+
+      {/* Bottom Navigation (solo mobile) */}
+      <BottomNav />
     </div>
   )
 }
