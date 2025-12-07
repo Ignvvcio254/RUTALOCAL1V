@@ -58,7 +58,7 @@ export class AuthService {
           tokens: mockTokens,
         };
 
-        TokenManager.saveTokens(response.tokens, credentials.remember || false);
+        await TokenManager.saveTokens(response.tokens, credentials.remember || false);
         console.log('✅ [AuthService] Tokens guardados');
         return response;
       }
@@ -85,7 +85,7 @@ export class AuthService {
     const data: LoginResponse = await response.json();
 
     // Guardar tokens
-    TokenManager.saveTokens(data.tokens, credentials.remember || false);
+    await TokenManager.saveTokens(data.tokens, credentials.remember || false);
 
     return data;
   }
@@ -107,7 +107,7 @@ export class AuthService {
         tokens: mockTokens,
       };
 
-      TokenManager.saveTokens(response.tokens, true);
+      await TokenManager.saveTokens(response.tokens, true);
       return response;
     }
 
@@ -128,7 +128,7 @@ export class AuthService {
     }
 
     const data: RegisterResponse = await response.json();
-    TokenManager.saveTokens(data.tokens, true);
+    await TokenManager.saveTokens(data.tokens, true);
 
     return data;
   }
