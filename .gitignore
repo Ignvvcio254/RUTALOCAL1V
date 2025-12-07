@@ -57,7 +57,7 @@ Thumbs.db
 
 # Local development
 .env.development
-.env.production
+# .env.production se mantiene para referencia de Vercel deployment
 
 # Logs
 logs
