@@ -8,7 +8,7 @@ export class TokenManager {
   /**
    * Guarda tokens en localStorage/sessionStorage Y cookies para middleware
    */
-  static saveTokens(tokens: AuthTokens, remember: boolean = false): void {
+  static async saveTokens(tokens: AuthTokens, remember: boolean = false): Promise<void> {
     const storage = remember ? localStorage : sessionStorage;
 
     storage.setItem(this.ACCESS_TOKEN_KEY, tokens.accessToken);
@@ -17,9 +17,31 @@ export class TokenManager {
     const expiryTime = Date.now() + tokens.expiresIn * 1000;
     storage.setItem(this.TOKEN_EXPIRY_KEY, expiryTime.toString());
 
-    // También guardar en cookie para que el middleware pueda leerlo
-    const expiryDate = new Date(expiryTime);
-    document.cookie = `access_token=${tokens.accessToken}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
+    // Guardar en cookie usando API route (más confiable en producción)
+    try {
+      await fetch('/api/auth/set-cookie', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: tokens.accessToken,
+          expiresIn: tokens.expiresIn,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to set cookie via API:', error);
+      // Fallback a document.cookie
+      const expiryDate = new Date(expiryTime);
+      const isSecure = window.location.protocol === 'https:';
+      const cookieOptions = [
+        `access_token=${tokens.accessToken}`,
+        'path=/',
+        `expires=${expiryDate.toUTCString()}`,
+        'SameSite=Lax',
+        isSecure ? 'Secure' : '',
+      ].filter(Boolean).join('; ');
+      
+      document.cookie = cookieOptions;
+    }
   }
 
   /**
