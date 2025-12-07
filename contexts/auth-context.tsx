@@ -1,124 +1,112 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { useRouter } from "next/navigation"
-
-interface User {
-  id: string
-  email: string
-  name: string
-}
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { AuthService } from "@/lib/auth/auth.service";
+import { TokenManager } from "@/lib/auth/token-manager";
+import type { AuthUser, LoginCredentials, RegisterCredentials } from "@/lib/auth/types";
 
 interface AuthContextType {
-  user: User | null
-  isLoading: boolean
-  login: (email: string, password: string) => Promise<void>
-  register: (name: string, email: string, password: string) => Promise<void>
-  loginWithGoogle: () => Promise<void>
-  logout: () => void
-  isAuthenticated: boolean
+  user: AuthUser | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (credentials: RegisterCredentials) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
-  // Cargar usuario desde localStorage al iniciar
+  // Cargar usuario al iniciar
   useEffect(() => {
-    const storedUser = localStorage.getItem("santiago_user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    const loadUser = async () => {
+      try {
+        if (AuthService.hasActiveSession()) {
+          const currentUser = await AuthService.getCurrentUser();
+          setUser(currentUser);
+        }
+      } catch {
+        TokenManager.clearTokens();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUser();
+  }, []);
+
+  const login = async (credentials: LoginCredentials) => {
+    setIsLoading(true);
+    try {
+      const { user: loggedUser } = await AuthService.login(credentials);
+      setUser(loggedUser);
+
+      // Redirigir a la página principal
+      console.log('✅ Login exitoso - Redirigiendo a página principal');
+      window.location.href = '/';
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false)
-  }, [])
+  };
 
-  const login = async (email: string, password: string) => {
-    setIsLoading(true)
-
-    // Simulación de autenticación (acepta cualquier credencial por ahora)
-    // TODO: Conectar con backend Django
-    await new Promise((resolve) => setTimeout(resolve, 800)) // Simular delay de red
-
-    const mockUser: User = {
-      id: "1",
-      email: email,
-      name: email.split("@")[0].charAt(0).toUpperCase() + email.split("@")[0].slice(1),
+  const register = async (credentials: RegisterCredentials) => {
+    setIsLoading(true);
+    try {
+      const { user: registeredUser } = await AuthService.register(credentials);
+      setUser(registeredUser);
+      router.push('/dashboard');
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    setUser(mockUser)
-    localStorage.setItem("santiago_user", JSON.stringify(mockUser))
-    setIsLoading(false)
-    router.push("/dashboard")
-  }
-
-  const register = async (name: string, email: string, password: string) => {
-    setIsLoading(true)
-
-    // Simulación de registro (acepta cualquier credencial por ahora)
-    // TODO: Conectar con backend Django
-    await new Promise((resolve) => setTimeout(resolve, 1000)) // Simular delay de red
-
-    const mockUser: User = {
-      id: Date.now().toString(),
-      email: email,
-      name: name,
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      await AuthService.logout();
+      setUser(null);
+      router.push('/login');
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    setUser(mockUser)
-    localStorage.setItem("santiago_user", JSON.stringify(mockUser))
-    setIsLoading(false)
-    router.push("/dashboard")
-  }
-
-  const loginWithGoogle = async () => {
-    setIsLoading(true)
-
-    // Simulación de login con Google
-    // TODO: Implementar OAuth con Google
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    const mockUser: User = {
-      id: Date.now().toString(),
-      email: "usuario@gmail.com",
-      name: "Usuario de Google",
+  const refreshUser = async () => {
+    try {
+      const currentUser = await AuthService.getCurrentUser();
+      setUser(currentUser);
+    } catch {
+      await logout();
     }
-
-    setUser(mockUser)
-    localStorage.setItem("santiago_user", JSON.stringify(mockUser))
-    setIsLoading(false)
-    router.push("/dashboard")
-  }
-
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem("santiago_user")
-    router.push("/login")
-  }
+  };
 
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
+        isAuthenticated: !!user,
         login,
         register,
-        loginWithGoogle,
         logout,
-        isAuthenticated: !!user,
+        refreshUser,
       }}
     >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
+  return context;
 }

@@ -7,6 +7,8 @@ import { RecommendationsSection } from "@/components/recommendations-section"
 import { RutaBot } from "@/components/ruta-bot"
 
 export default function Home() {
+  // En modo desarrollo, siempre mostrar landing page sin redirecciones
+  // Los usuarios pueden navegar manualmente al dashboard
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <Navbar />
