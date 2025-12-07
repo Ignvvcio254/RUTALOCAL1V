@@ -6,7 +6,7 @@ export class TokenManager {
   private static readonly TOKEN_EXPIRY_KEY = 'ruta_local_token_expiry';
 
   /**
-   * Guarda tokens en localStorage/sessionStorage
+   * Guarda tokens en localStorage/sessionStorage Y cookies para middleware
    */
   static saveTokens(tokens: AuthTokens, remember: boolean = false): void {
     const storage = remember ? localStorage : sessionStorage;
@@ -16,6 +16,10 @@ export class TokenManager {
 
     const expiryTime = Date.now() + tokens.expiresIn * 1000;
     storage.setItem(this.TOKEN_EXPIRY_KEY, expiryTime.toString());
+
+    // También guardar en cookie para que el middleware pueda leerlo
+    const expiryDate = new Date(expiryTime);
+    document.cookie = `access_token=${tokens.accessToken}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
   }
 
   /**
@@ -58,7 +62,7 @@ export class TokenManager {
   }
 
   /**
-   * Limpia todos los tokens
+   * Limpia todos los tokens (storage y cookies)
    */
   static clearTokens(): void {
     if (typeof window === 'undefined') return;
@@ -70,6 +74,9 @@ export class TokenManager {
     sessionStorage.removeItem(this.ACCESS_TOKEN_KEY);
     sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
     sessionStorage.removeItem(this.TOKEN_EXPIRY_KEY);
+
+    // Limpiar cookie
+    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   }
 
   /**
