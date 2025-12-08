@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Home, Map, Search, Route, MessageCircle } from "lucide-react"
+import { Home, Map, Search, Route, User } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { SearchModal } from "./search-modal"
+import { useAuth } from "@/contexts/auth-context"
 
 interface NavItem {
   id: string
@@ -17,23 +18,11 @@ interface NavItem {
 
 export function BottomNav() {
   const pathname = usePathname()
+  const { isAuthenticated } = useAuth()
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   const handleSearchClick = () => {
     setIsSearchOpen(true)
-  }
-
-  const handleChatClick = () => {
-    const rutabot = document.getElementById('rutabot-container')
-    if (rutabot) {
-      rutabot.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      setTimeout(() => {
-        const chatButton = rutabot.querySelector('button')
-        if (chatButton) {
-          chatButton.click()
-        }
-      }, 500)
-    }
   }
 
   const navItems: NavItem[] = [
@@ -63,11 +52,10 @@ export function BottomNav() {
       href: '/builder',
     },
     {
-      id: 'chat',
-      label: 'Chat',
-      icon: MessageCircle,
-      href: '#',
-      action: handleChatClick,
+      id: 'profile',
+      label: 'Perfil',
+      icon: User,
+      href: isAuthenticated ? '/profile' : '/login',
     },
   ]
 
