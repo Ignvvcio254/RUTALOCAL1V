@@ -60,7 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { user: registeredUser } = await AuthService.register(credentials);
       setUser(registeredUser);
-      router.push('/dashboard');
+      // Redirigir a la página principal (landing)
+      window.location.href = '/';
     } finally {
       setIsLoading(false);
     }
