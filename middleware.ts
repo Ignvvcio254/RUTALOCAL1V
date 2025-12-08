@@ -29,27 +29,23 @@ export function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.includes(pathname);
   const isAuthRoute = authRoutes.includes(pathname);
 
-  // Si no hay token y la ruta no es pública → Login
-  if (!hasToken && !isPublicRoute) {
+  // La raíz (/) es pública y accesible para todos
+  const isRootRoute = pathname === '/';
+
+  // Si no hay token y la ruta no es pública ni raíz → Login
+  if (!hasToken && !isPublicRoute && !isRootRoute) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Si hay token y está en ruta de auth → Dashboard
+  // Si hay token y está en ruta de auth → Redirigir a la raíz (landing)
   if (hasToken && isAuthRoute) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // Redirigir raíz a login si no autenticado
-  if (pathname === '/' && !hasToken) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  // Redirigir raíz a dashboard si autenticado
-  if (pathname === '/' && hasToken) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
+  // Permitir acceso a la raíz (landing page) sin redirección
+  // La página principal muestra el feed de negocios y es accesible para todos
 
   return NextResponse.next();
 }
