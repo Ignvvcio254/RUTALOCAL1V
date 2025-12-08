@@ -85,7 +85,12 @@ export default function RegisterPage() {
     }
 
     try {
-      await register(name, email, password)
+      await register({
+        name,
+        email,
+        password,
+        passwordConfirm: confirmPassword,
+      })
       toast({
         title: "¡Registro exitoso!",
         description: "Tu cuenta ha sido creada correctamente",

@@ -112,13 +112,19 @@ export class AuthService {
     }
 
     // Modo producción
+    // Generar username desde el email
+    const username = credentials.email.split('@')[0];
+
     const response = await fetch(`${this.API_URL}/api/auth/register/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: credentials.name,
         email: credentials.email,
+        username: username,
         password: credentials.password,
+        password_confirmation: credentials.passwordConfirm,
+        first_name: credentials.name.split(' ')[0] || '',
+        last_name: credentials.name.split(' ').slice(1).join(' ') || '',
       }),
     });
 
