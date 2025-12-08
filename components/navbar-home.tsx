@@ -117,70 +117,8 @@ export function NavbarHome() {
               </Button>
             </div>
 
-            {/* Mobile: Botón de perfil en lugar de RutaGo */}
-            <div className="flex lg:hidden items-center gap-2">
-              {isAuthenticated ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
-                    >
-                      <User className="w-4 h-4" />
-                      <span className="font-medium">Perfil</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56">
-                    <DropdownMenuLabel>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user?.name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard">Mi Dashboard</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile">Mi Perfil</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/builder">Mis Rutas</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600">
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Cerrar Sesión
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Link href="/login">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="font-medium">Ingresar</span>
-                  </Button>
-                </Link>
-              )}
-            </div>
-
           {/* Iconos de Usuario (Derecha) */}
           <div className="flex items-center gap-3">
-            {/* Chatbot - Solo móvil */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBotClick}
-              className="lg:hidden p-2 hover:bg-orange-50 rounded-lg transition-colors"
-            >
-              <Bot className="w-5 h-5 text-orange-600" />
-            </Button>
-
             {/* Notificaciones - Solo desktop */}
             <Button
               variant="ghost"
@@ -191,10 +129,10 @@ export function NavbarHome() {
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </Button>
 
-            {/* Avatar / Login - Solo desktop */}
+            {/* Avatar / Perfil - Desktop y Mobile */}
             {isAuthenticated ? (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild className="hidden lg:flex">
+                <DropdownMenuTrigger asChild>
                   <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
                     <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-semibold">
                       {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
@@ -226,7 +164,7 @@ export function NavbarHome() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/login" className="hidden lg:block">
+              <Link href="/login">
                 <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
                   <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
                     <User className="w-4 h-4" />
