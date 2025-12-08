@@ -3,18 +3,29 @@ import { UserData } from '../types/user.types';
 import { ProfileData } from '../types/profile.types';
 import { globalCache } from '../utils/cache.manager';
 import { mockUser } from '../mock/mock-data';
+import { backendUserToProfileUser } from '../adapters/auth-to-profile.adapter';
+import { TokenManager } from '@/lib/auth/token-manager';
+import { env } from '@/lib/env';
 
-const USE_MOCK_DATA = process.env.NEXT_PUBLIC_DEV_MODE === 'true' || process.env.NODE_ENV === 'development';
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
 
 export class UserProfileService {
   private baseUrl: string;
 
-  constructor(baseUrl: string = '/api') {
+  constructor(baseUrl: string = env.apiUrl) {
     this.baseUrl = baseUrl;
   }
 
   private async delay(ms: number = 500) {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private getAuthHeaders(): HeadersInit {
+    const token = TokenManager.getAccessToken();
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    };
   }
 
   async getProfile(userId: string): Promise<User> {
@@ -32,15 +43,20 @@ export class UserProfileService {
       return user;
     }
 
-    // Fetch desde API
-    const response = await fetch(`${this.baseUrl}/users/${userId}`);
+    // Fetch desde API backend real - usar endpoint /api/auth/me/
+    const response = await fetch(`${this.baseUrl}/api/auth/me/`, {
+      headers: this.getAuthHeaders(),
+    });
 
     if (!response.ok) {
       throw new Error('Error al obtener el perfil');
     }
 
-    const data: UserData = await response.json();
-    const user = User.create(data);
+    const backendData = await response.json();
+
+    // Transformar datos del backend al formato UserData
+    const userData = backendUserToProfileUser(backendData);
+    const user = User.create(userData);
 
     // Cachear resultado
     globalCache.set(`user:${userId}`, user);
@@ -59,20 +75,30 @@ export class UserProfileService {
       return user;
     }
 
-    const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+    // Transformar datos del perfil al formato del backend
+    const backendData: any = {};
+    if (profileData.name) {
+      const nameParts = profileData.name.split(' ');
+      backendData.first_name = nameParts[0] || '';
+      backendData.last_name = nameParts.slice(1).join(' ') || '';
+    }
+    if (profileData.phone) backendData.phone = profileData.phone;
+    if (profileData.bio) backendData.bio = profileData.bio;
+    if (profileData.location) backendData.location = profileData.location;
+
+    const response = await fetch(`${this.baseUrl}/api/users/profile/`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(profileData),
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(backendData),
     });
 
     if (!response.ok) {
       throw new Error('Error al actualizar el perfil');
     }
 
-    const data: UserData = await response.json();
-    const user = User.create(data);
+    const responseData = await response.json();
+    const userData = backendUserToProfileUser(responseData);
+    const user = User.create(userData);
 
     // Invalidar cache
     globalCache.invalidate(`user:${userId}`);
@@ -94,8 +120,12 @@ export class UserProfileService {
     const formData = new FormData();
     formData.append('avatar', file);
 
-    const response = await fetch(`${this.baseUrl}/users/${userId}/avatar`, {
+    const token = TokenManager.getAccessToken();
+    const response = await fetch(`${this.baseUrl}/api/users/avatar/`, {
       method: 'POST',
+      headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
       body: formData,
     });
 
@@ -108,7 +138,7 @@ export class UserProfileService {
     // Invalidar cache
     globalCache.invalidate(`user:${userId}`);
 
-    return data.url;
+    return data.avatar || data.url;
   }
 
   async deleteAvatar(userId: string): Promise<void> {
@@ -119,8 +149,9 @@ export class UserProfileService {
       return;
     }
 
-    const response = await fetch(`${this.baseUrl}/users/${userId}/avatar`, {
+    const response = await fetch(`${this.baseUrl}/api/users/avatar/`, {
       method: 'DELETE',
+      headers: this.getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -139,11 +170,9 @@ export class UserProfileService {
       return;
     }
 
-    const response = await fetch(`${this.baseUrl}/users/${userId}/preferences`, {
+    const response = await fetch(`${this.baseUrl}/api/users/preferences/`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: this.getAuthHeaders(),
       body: JSON.stringify(preferences),
     });
 
@@ -163,11 +192,9 @@ export class UserProfileService {
       return;
     }
 
-    const response = await fetch(`${this.baseUrl}/users/${userId}/privacy`, {
+    const response = await fetch(`${this.baseUrl}/api/users/privacy/`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: this.getAuthHeaders(),
       body: JSON.stringify(privacy),
     });
 
