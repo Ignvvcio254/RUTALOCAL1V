@@ -181,7 +181,7 @@ export function AuthCheck({ children }: { children: React.ReactNode }) {
       </div>
     )
   }
-
+ 
   // No mostrar nada si está redirigiendo
   if (!isAuthenticated && !PUBLIC_ROUTES.includes(pathname)) {
     return null
