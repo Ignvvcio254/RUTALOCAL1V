@@ -27,7 +27,7 @@ export function RutaBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "¡Hola! 👋 Soy RutaBot. ¿Qué tipo de experiencia buscas hoy?",
+      text: "¡Hola! 👋 Soy RutaGo. ¿Qué tipo de experiencia buscas hoy?",
       sender: "bot",
       timestamp: new Date(),
     },
@@ -84,7 +84,7 @@ export function RutaBot() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-24 lg:bottom-6 right-4 lg:right-6 z-[60]">
       <AnimatePresence>
         {isOpen ? (
           <motion.div
@@ -93,7 +93,7 @@ export function RutaBot() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
-            className="absolute bottom-0 right-0 w-[400px] h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
+            className="absolute bottom-0 right-0 w-[calc(100vw-2rem)] lg:w-[400px] h-[calc(100vh-8rem)] lg:h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 flex items-center justify-between">
@@ -102,7 +102,7 @@ export function RutaBot() {
                   <MessageCircle className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold">RutaBot</h3>
+                  <h3 className="text-white font-semibold">RutaGo</h3>
                   <p className="text-indigo-100 text-xs">Tu guía local</p>
                 </div>
               </div>
@@ -245,21 +245,38 @@ export function RutaBot() {
         ) : null}
       </AnimatePresence>
 
-      {/* FAB Button */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative w-14 h-14 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-lg flex items-center justify-center text-white"
-        aria-label="Open chat"
-      >
-        <motion.div
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-          className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full opacity-75"
-        />
-        <MessageCircle className="w-6 h-6 relative z-10" />
-      </motion.button>
+      {/* FAB Button - Solo Desktop */}
+      <div className="relative hidden lg:block">
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative w-14 h-14 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full shadow-lg flex items-center justify-center text-white"
+          aria-label="Open chat"
+        >
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full opacity-75"
+          />
+          <MessageCircle className="w-6 h-6 relative z-10" />
+        </motion.button>
+
+        {/* Badge "Online 24/7" */}
+        {!isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="absolute -top-2 right-16 bg-white px-2.5 py-1 rounded-full shadow-md border border-gray-200 whitespace-nowrap"
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <span className="text-xs font-medium text-gray-700">Online 24/7</span>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   )
 }

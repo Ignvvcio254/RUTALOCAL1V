@@ -1,0 +1,96 @@
+===========================================
+VARIABLES DE ENTORNO PARA VERCEL
+===========================================
+
+Copia estas variables en Vercel Dashboard:
+Settings → Environment Variables
+
+IMPORTANTE: Marca todas para Production, Preview y Development
+
+-------------------------------------------
+⚠️ CRÍTICA - Sin esta variable el login con Google fallará
+VARIABLE: NEXT_PUBLIC_DEV_MODE
+VALUE: true
+ENVIRONMENTS: ✅ Production ✅ Preview ✅ Development
+-------------------------------------------
+
+VARIABLE: NEXT_PUBLIC_API_URL
+VALUE: http://localhost:8000
+-------------------------------------------
+
+VARIABLE: NEXT_PUBLIC_API_BASE_PATH
+VALUE: /api
+-------------------------------------------
+
+VARIABLE: NEXT_PUBLIC_MAPBOX_TOKEN
+VALUE: pk.eyJ1IjoibmFjaG8yNTQiLCJhIjoiY21pdGxyZjhnMHRlYjNnb243bnA1OG81ayJ9.BPTKLir4w184eLNzsao9XQ
+-------------------------------------------
+
+VARIABLE: NEXT_PUBLIC_STORAGE_KEY
+VALUE: santiago_user
+-------------------------------------------
+
+VARIABLE: NEXT_PUBLIC_TOKEN_KEY
+VALUE: santiago_token
+-------------------------------------------
+
+VARIABLE: NEXT_PUBLIC_JWT_SECRET
+VALUE: dev-secret-key-change-in-production
+-------------------------------------------
+
+VARIABLE: NEXT_PUBLIC_JWT_EXPIRATION
+VALUE: 7d
+-------------------------------------------
+
+VARIABLE: NEXT_PUBLIC_APP_URL
+VALUE: https://rutalocal1v.vercel.app
+-------------------------------------------
+
+===========================================
+INSTRUCCIONES DE USO
+===========================================
+
+1. Ve a: https://vercel.com/dashboard
+2. Selecciona tu proyecto: RUTALOCAL1V
+3. Settings → Environment Variables
+4. Haz clic en "Add New"
+5. Para cada variable arriba:
+   - Name: [VARIABLE]
+   - Value: [VALUE]
+   - Environments: ✅ Production ✅ Preview ✅ Development
+6. Click "Save"
+
+===========================================
+VERIFICACIÓN
+===========================================
+
+Después de agregar las variables:
+1. Ve a Deployments
+2. Haz clic en "Redeploy" en el último deployment
+3. O simplemente haz push a main y se redeployará automáticamente
+
+Para verificar que funcionó:
+1. Abre tu app en Vercel
+2. Haz clic en "Iniciar Sesión"
+3. Usa CUALQUIER email/password (ej: test@test.com / 123456)
+4. Deberías poder entrar sin problemas
+
+===========================================
+CREDENCIALES DE PRUEBA
+===========================================
+
+En modo DEV, TODAS estas credenciales funcionan:
+
+Email: test@rutalocal.cl
+Password: 123456
+
+Email: admin@test.com
+Password: admin123
+
+Email: demo@example.com
+Password: password
+
+Email: [CUALQUIER_EMAIL]
+Password: [CUALQUIER_PASSWORD]
+
+===========================================

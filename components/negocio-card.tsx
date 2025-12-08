@@ -1,12 +1,13 @@
 "use client"
 
-import { Heart, MapPin, Star } from "lucide-react"
+import { Heart, MapPin, Star, Plus, Map, CheckCircle2 } from "lucide-react"
 import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
 
 interface NegocioCardProps {
   id: string
   name: string
-  category: "CAFÉ" | "ARTE" | "TOUR" | "LIBRERÍA" | "HOSTAL" | "RESTAURANTE" | "BAR" | "GALERÍA" | "PANADERÍA" | "MERCADO"
+  category: "CAFÉ" | "ARTE" | "TOUR" | "LIBRERÍA" | "HOSTAL" | "RESTAURANTE" | "BAR" | "GALERÍA" | "PANADERÍA" | "MERCADO" | "HOTEL BOUTIQUE" | "HOSPEDAJE" | "TURISMO" | string
   rating: number
   reviews: number
   distance: string
@@ -14,6 +15,8 @@ interface NegocioCardProps {
   priceRange: number
   isOpen: boolean
   image: string
+  hasOffer?: boolean
+  isVerified?: boolean
   onClick?: () => void
 }
 
@@ -31,6 +34,7 @@ const categoryColors: Record<string, { badge: string; bg: string }> = {
 }
 
 export function NegocioCard({
+  id,
   name,
   category,
   rating,
@@ -40,42 +44,113 @@ export function NegocioCard({
   priceRange,
   isOpen,
   image,
+  hasOffer,
+  isVerified,
   onClick,
 }: NegocioCardProps) {
   const [isFavorited, setIsFavorited] = useState(false)
+  const [isAddedToRoute, setIsAddedToRoute] = useState(false)
+  const { toast } = useToast()
   const colors = categoryColors[category] || { badge: "bg-gray-500", bg: "/placeholder.svg" }
 
+  const handleAddToRoute = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setIsAddedToRoute(true)
+    toast({
+      title: "Agregado a tu ruta",
+      description: `${name} ha sido agregado a tu ruta.`,
+    })
+    // TODO: Implementar lógica real de agregar a ruta
+  }
+
+  const handleViewOnMap = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    // TODO: Redirigir al mapa con este negocio centrado
+    window.location.href = `/map-interactive?business=${id}`
+  }
+
   return (
-    <div 
-      className="group cursor-pointer overflow-hidden rounded-lg bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:translate-y-[-8px]"
+    <div
+      className="group cursor-pointer overflow-hidden rounded-xl bg-white shadow-md transition-all duration-300 hover:shadow-2xl hover:translate-y-[-4px] border border-gray-100"
       onClick={onClick}
     >
       {/* Image Container */}
-      <div className="relative aspect-video overflow-hidden rounded-t-lg bg-gray-200">
+      <div className="relative aspect-video overflow-hidden bg-gray-200">
         <img
           src={image || "/placeholder.svg"}
           alt={name}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
         />
 
+        {/* Overlay con botones de acción (visible en hover) */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute bottom-3 left-3 right-3 flex gap-2">
+            <button
+              onClick={handleAddToRoute}
+              disabled={isAddedToRoute}
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                isAddedToRoute
+                  ? "bg-green-500 text-white"
+                  : "bg-white text-gray-900 hover:bg-gray-100"
+              }`}
+            >
+              {isAddedToRoute ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>En Ruta</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  <span>Agregar</span>
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleViewOnMap}
+              className="px-3 py-2 bg-white/90 backdrop-blur-sm rounded-lg hover:bg-white transition-all"
+              title="Ver en mapa"
+            >
+              <Map className="w-4 h-4 text-gray-900" />
+            </button>
+          </div>
+        </div>
+
         {/* Category Badge */}
-        <div className={`absolute top-3 left-3 ${colors.badge} rounded-md px-2 py-1 text-xs font-semibold text-white`}>
+        <div className={`absolute top-3 left-3 ${colors.badge} rounded-lg px-2.5 py-1 text-xs font-semibold text-white shadow-md`}>
           {category}
         </div>
 
-        {/* Heart Icon */}
-        <button
-          onClick={(e) => {
-            e.preventDefault()
-            setIsFavorited(!isFavorited)
-          }}
-          className="absolute top-3 right-3 rounded-full bg-white/90 p-2 transition-all hover:bg-white"
-        >
-          <Heart
-            size={18}
-            className={`transition-colors ${isFavorited ? "fill-red-500 text-red-500" : "text-gray-600"}`}
-          />
-        </button>
+        {/* Badges superiores derecha */}
+        <div className="absolute top-3 right-3 flex flex-col gap-2">
+          {/* Heart Icon */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsFavorited(!isFavorited)
+            }}
+            className="rounded-full bg-white/95 backdrop-blur-sm p-2 transition-all hover:bg-white shadow-md"
+          >
+            <Heart
+              size={16}
+              className={`transition-colors ${isFavorited ? "fill-red-500 text-red-500" : "text-gray-600"}`}
+            />
+          </button>
+
+          {/* Verificado Badge */}
+          {isVerified && (
+            <div className="rounded-full bg-blue-500 p-1.5 shadow-md" title="Verificado">
+              <CheckCircle2 size={14} className="text-white" />
+            </div>
+          )}
+        </div>
+
+        {/* Oferta Badge */}
+        {hasOffer && (
+          <div className="absolute bottom-3 right-3 bg-red-500 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md">
+            🎁 Oferta
+          </div>
+        )}
       </div>
 
       {/* Content */}
