@@ -118,19 +118,21 @@ export class UserProfileService {
     }
 
     const formData = new FormData();
-    formData.append('avatar', file);
+    formData.append('image', file); // Cloudinary espera 'image', no 'avatar'
 
     const token = TokenManager.getAccessToken();
-    const response = await fetch(`${this.baseUrl}/api/users/avatar/`, {
+    const response = await fetch(`${this.baseUrl}/api/media/profile/upload/`, {
       method: 'POST',
       headers: {
         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        // NO incluir Content-Type con FormData, el browser lo setea automáticamente
       },
       body: formData,
     });
 
     if (!response.ok) {
-      throw new Error('Error al subir el avatar');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Error al subir el avatar');
     }
 
     const data = await response.json();
@@ -138,7 +140,8 @@ export class UserProfileService {
     // Invalidar cache
     globalCache.invalidate(`user:${userId}`);
 
-    return data.avatar || data.url;
+    // El endpoint de Cloudinary retorna: { success: true, data: { avatar, avatar_thumbnail } }
+    return data.data?.avatar || data.avatar || data.url;
   }
 
   async deleteAvatar(userId: string): Promise<void> {
@@ -149,13 +152,14 @@ export class UserProfileService {
       return;
     }
 
-    const response = await fetch(`${this.baseUrl}/api/users/avatar/`, {
+    const response = await fetch(`${this.baseUrl}/api/media/profile/delete/`, {
       method: 'DELETE',
       headers: this.getAuthHeaders(),
     });
 
     if (!response.ok) {
-      throw new Error('Error al eliminar el avatar');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Error al eliminar el avatar');
     }
 
     // Invalidar cache
