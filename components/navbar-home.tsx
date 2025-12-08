@@ -146,7 +146,7 @@ export function NavbarHome() {
                 <DropdownMenuTrigger asChild>
                   <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
                     <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-semibold">
-                      {user?.name.charAt(0).toUpperCase() || "U"}
+                      {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>

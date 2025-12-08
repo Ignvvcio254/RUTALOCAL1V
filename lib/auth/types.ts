@@ -8,10 +8,14 @@ export interface AuthTokens {
 export interface AuthUser {
   id: string;
   email: string;
-  name: string;
+  name?: string;
   avatar?: string;
-  role: 'user' | 'admin';
-  emailVerified: boolean;
+  role?: 'user' | 'admin';
+  emailVerified?: boolean;
+  // Campos opcionales del backend
+  username?: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface LoginCredentials {

@@ -41,6 +41,26 @@ export class AuthService {
   }
 
   /**
+   * Normaliza los datos del usuario del backend para asegurar campos requeridos
+   */
+  private static normalizeUser(userData: any): AuthUser {
+    return {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name || 
+            (userData.first_name && userData.last_name 
+              ? `${userData.first_name} ${userData.last_name}`.trim()
+              : userData.first_name || userData.last_name || userData.username || userData.email.split('@')[0]),
+      avatar: userData.avatar,
+      role: userData.role || 'user',
+      emailVerified: userData.emailVerified ?? true,
+      username: userData.username,
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+    };
+  }
+
+  /**
    * Login con email y contraseña
    */
   static async login(credentials: LoginCredentials): Promise<LoginResponse> {
@@ -83,6 +103,9 @@ export class AuthService {
     }
 
     const data: LoginResponse = await response.json();
+    
+    // Normalizar datos del usuario
+    data.user = this.normalizeUser(data.user);
 
     // Guardar tokens
     await TokenManager.saveTokens(data.tokens, credentials.remember || false);
@@ -134,6 +157,10 @@ export class AuthService {
     }
 
     const data: RegisterResponse = await response.json();
+    
+    // Normalizar datos del usuario
+    data.user = this.normalizeUser(data.user);
+    
     await TokenManager.saveTokens(data.tokens, true);
 
     return data;
@@ -232,7 +259,8 @@ export class AuthService {
       throw new Error('Failed to get user');
     }
 
-    return response.json();
+    const userData = await response.json();
+    return this.normalizeUser(userData);
   }
 
   /**
