@@ -12,15 +12,9 @@ interface Message {
   timestamp: Date
 }
 
-const QUICK_REPLIES = ["Cafés cerca", "Crear ruta", "Eventos hoy", "Ayuda"]
+import { env } from "@/lib/env"
 
-const BOT_RESPONSES: { [key: string]: string } = {
-  default: "¡Perfecto! Te estoy buscando los lugares más auténticos cerca de ti. Un momento...",
-  cafe: "☕ Te recomiendo tres cafés increíbles en tu zona. Todos tienen historia y sabor local.",
-  ruta: "🗺️ Voy a crear una ruta personalizada basada en tus intereses. ¿Cuántas horas tienes?",
-  eventos: "🎉 Hay 5 eventos locales hoy. ¿Qué tipo de actividad te interesa?",
-  ayuda: "🆘 Estoy aquí para ayudarte. Puedo recomendarte lugares, crear rutas y mostrarte eventos locales.",
-}
+const QUICK_REPLIES = ["Cafés cerca", "Crear ruta", "Eventos hoy", "Ayuda"]
 
 export function RutaBot() {
   const [isOpen, setIsOpen] = useState(false)
@@ -58,25 +52,50 @@ export function RutaBot() {
     setInput("")
     setIsTyping(true)
 
-    // Simulate bot thinking and response
-    setTimeout(() => {
-      let response = BOT_RESPONSES.default
-      const lowerText = text.toLowerCase()
+    try {
+      // Preparar historial de conversación para el contexto
+      const conversationHistory = messages.map(msg => ({
+        role: msg.sender === "user" ? "user" : "assistant",
+        content: msg.text
+      }))
 
-      if (lowerText.includes("café")) response = BOT_RESPONSES.cafe
-      else if (lowerText.includes("ruta")) response = BOT_RESPONSES.ruta
-      else if (lowerText.includes("evento")) response = BOT_RESPONSES.eventos
-      else if (lowerText.includes("ayuda")) response = BOT_RESPONSES.ayuda
+      // Llamar a la API de Gemini
+      const response = await fetch(`${env.apiUrl}/api/ai/chat/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: text.trim(),
+          conversation_history: conversationHistory
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al obtener respuesta del bot')
+      }
+
+      const data = await response.json()
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response,
+        text: data.response || "Lo siento, no pude procesar tu mensaje. ¿Podrías intentar de nuevo?",
         sender: "bot",
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, botMessage])
+    } catch (error) {
+      console.error('Error al comunicarse con RutaGO:', error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "Lo siento, tuve un problema al conectarme. Por favor, intenta de nuevo en un momento.",
+        sender: "bot",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
   const handleQuickReply = (text: string) => {
