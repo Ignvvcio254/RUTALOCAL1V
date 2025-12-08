@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Home, Map, Search, Route, User } from "lucide-react"
+import { Home, Map, Search, Route, Bot } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -12,7 +12,7 @@ interface NavItem {
   id: string
   label: string
   icon: typeof Home
-  href: string
+  href?: string
   action?: () => void
 }
 
@@ -23,6 +23,10 @@ export function BottomNav() {
 
   const handleSearchClick = () => {
     setIsSearchOpen(true)
+  }
+
+  const handleChatbotClick = () => {
+    window.dispatchEvent(new CustomEvent('toggle-chatbot', { detail: { open: true } }))
   }
 
   const navItems: NavItem[] = [
@@ -52,10 +56,11 @@ export function BottomNav() {
       href: '/builder',
     },
     {
-      id: 'profile',
-      label: 'Perfil',
-      icon: User,
-      href: isAuthenticated ? '/profile' : '/login',
+      id: 'chatbot',
+      label: 'RutaGo',
+      icon: Bot,
+      href: '#',
+      action: handleChatbotClick,
     },
   ]
 
@@ -96,13 +101,13 @@ export function BottomNav() {
                         <Icon
                           className={cn(
                             "w-6 h-6 transition-colors",
-                            isActive ? "text-indigo-600" : "text-gray-500"
+                            item.id === 'chatbot' ? "text-orange-600" : "text-gray-500"
                           )}
                         />
                         <span
                           className={cn(
                             "text-xs font-medium transition-colors",
-                            isActive ? "text-indigo-600" : "text-gray-500"
+                            item.id === 'chatbot' ? "text-orange-600" : "text-gray-500"
                           )}
                         >
                           {item.label}
