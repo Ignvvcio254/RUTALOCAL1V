@@ -5,7 +5,6 @@ import { MainCategoryFilter } from "@/components/filters/main-category-filter"
 import { ExperienceFilter } from "@/components/filters/experience-filter"
 import { AttributeFilter } from "@/components/filters/attribute-filter"
 import { BusinessFeed } from "@/components/business-feed"
-import { RutaBot } from "@/components/ruta-bot"
 import { BottomNav } from "@/components/bottom-nav"
 import { FilterProvider } from "@/contexts/filter-context"
 
@@ -25,11 +24,6 @@ export default function Home() {
 
         {/* Feed de Negocios */}
         <BusinessFeed />
-
-        {/* RutaBot Flotante (solo desktop) */}
-        <div id="rutabot-container">
-          <RutaBot />
-        </div>
 
         {/* Bottom Navigation (solo mobile) */}
         <BottomNav />

@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
 import { Toaster } from '@/components/ui/toaster'
 import { ClientLayout } from '@/components/client-layout'
+import { RutaBot } from '@/components/ruta-bot'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -45,6 +46,8 @@ export default function RootLayout({
             {children}
           </ClientLayout>
           <Toaster />
+          {/* Chatbot global - disponible en todas las páginas */}
+          <RutaBot />
         </AuthProvider>
         <Analytics />
       </body>

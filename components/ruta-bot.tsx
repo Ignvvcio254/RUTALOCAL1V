@@ -38,6 +38,20 @@ export function RutaBot() {
     scrollToBottom()
   }, [messages])
 
+  // Listen for global toggle event
+  useEffect(() => {
+    const handleToggle = (event: any) => {
+      if (event.detail?.open !== undefined) {
+        setIsOpen(event.detail.open)
+      } else {
+        setIsOpen(prev => !prev)
+      }
+    }
+
+    window.addEventListener('toggle-chatbot', handleToggle)
+    return () => window.removeEventListener('toggle-chatbot', handleToggle)
+  }, [])
+
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return
 

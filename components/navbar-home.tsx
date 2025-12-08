@@ -23,17 +23,8 @@ export function NavbarHome() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   const handleBotClick = () => {
-    const rutabot = document.getElementById('rutabot-container')
-    if (rutabot) {
-      rutabot.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      // Trigger chatbot open
-      setTimeout(() => {
-        const chatButton = rutabot.querySelector('button')
-        if (chatButton) {
-          chatButton.click()
-        }
-      }, 500)
-    }
+    // Trigger custom event to open chatbot globally
+    window.dispatchEvent(new CustomEvent('toggle-chatbot', { detail: { open: true } }))
   }
 
   return (
@@ -130,20 +121,30 @@ export function NavbarHome() {
 
           {/* Iconos de Usuario (Derecha) */}
           <div className="flex items-center gap-3">
-            {/* Notificaciones */}
+            {/* Chatbot - Solo móvil */}
             <Button
               variant="ghost"
               size="sm"
-              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={handleBotClick}
+              className="lg:hidden p-2 hover:bg-orange-50 rounded-lg transition-colors"
+            >
+              <Bot className="w-5 h-5 text-orange-600" />
+            </Button>
+
+            {/* Notificaciones - Solo desktop */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden lg:block relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Bell className="w-5 h-5 text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </Button>
 
-            {/* Avatar / Login */}
+            {/* Avatar / Login - Solo desktop */}
             {isAuthenticated ? (
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger asChild className="hidden lg:flex">
                   <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
                     <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-semibold">
                       {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
@@ -175,7 +176,7 @@ export function NavbarHome() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/login">
+              <Link href="/login" className="hidden lg:block">
                 <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
                   <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
                     <User className="w-4 h-4" />
