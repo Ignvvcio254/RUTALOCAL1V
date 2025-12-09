@@ -23,17 +23,8 @@ export function NavbarHome() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   const handleBotClick = () => {
-    const rutabot = document.getElementById('rutabot-container')
-    if (rutabot) {
-      rutabot.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      // Trigger chatbot open
-      setTimeout(() => {
-        const chatButton = rutabot.querySelector('button')
-        if (chatButton) {
-          chatButton.click()
-        }
-      }, 500)
-    }
+    // Trigger custom event to open chatbot globally
+    window.dispatchEvent(new CustomEvent('toggle-chatbot', { detail: { open: true } }))
   }
 
   return (
