@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Map, Route, Bot, Bell, User, LogOut, MapPin, Search } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -22,26 +22,18 @@ export function NavbarHome() {
   const router = useRouter()
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-  // Debug logs
-  useEffect(() => {
-    console.log('🔍 NavbarHome Debug:', {
-      isAuthenticated,
-      user,
-      hasUser: !!user,
-      userName: user?.name,
-      userEmail: user?.email
-    })
-  }, [isAuthenticated, user])
-
   const handleBotClick = () => {
-    console.log('🤖 Bot button clicked')
-    // Trigger custom event to open chatbot globally
-    window.dispatchEvent(new CustomEvent('toggle-chatbot', { detail: { open: true } }))
-  }
-
-  const handleLogout = () => {
-    console.log('👋 Logout clicked')
-    logout()
+    const rutabot = document.getElementById('rutabot-container')
+    if (rutabot) {
+      rutabot.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      // Trigger chatbot open
+      setTimeout(() => {
+        const chatButton = rutabot.querySelector('button')
+        if (chatButton) {
+          chatButton.click()
+        }
+      }, 500)
+    }
   }
 
   return (
@@ -134,19 +126,21 @@ export function NavbarHome() {
               </Button>
             </div>
 
+            {/* Mobile: Sin botones de acciones rápidas */}
+
           {/* Iconos de Usuario (Derecha) */}
           <div className="flex items-center gap-3">
-            {/* Notificaciones - Solo desktop */}
+            {/* Notificaciones */}
             <Button
               variant="ghost"
               size="sm"
-              className="hidden lg:block relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Bell className="w-5 h-5 text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </Button>
 
-            {/* Avatar / Perfil - Desktop y Mobile */}
+            {/* Avatar / Login */}
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -174,7 +168,7 @@ export function NavbarHome() {
                     <Link href="/builder">Mis Rutas</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                  <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600">
                     <LogOut className="w-4 h-4 mr-2" />
                     Cerrar Sesión
                   </DropdownMenuItem>
