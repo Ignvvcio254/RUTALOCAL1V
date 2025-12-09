@@ -146,29 +146,6 @@ export default function CreateBusinessPage() {
     }
   }
 
-  const uploadImageToCloudinary = async (file: File): Promise<string> => {
-    const formData = new FormData()
-    formData.append('image', file)
-
-    const token = TokenManager.getAccessToken()
-    
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/media/business/upload/`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || 'Error al subir imagen')
-    }
-
-    const data = await response.json()
-    return data.url || data.data?.url || data.image_url
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -195,43 +172,53 @@ export default function CreateBusinessPage() {
         return
       }
 
-      // Subir imagen de portada
       setUploadingImages(true)
-      const coverImageUrl = await uploadImageToCloudinary(coverImage.file)
 
-      // Subir imágenes de galería
-      const galleryUrls = await Promise.all(
-        galleryImages.map(img => uploadImageToCloudinary(img.file))
-      )
-      setUploadingImages(false)
-
-      // Preparar datos del negocio
-      const businessData = {
-        name: formData.name,
-        category: formData.category,
-        description: formData.description,
-        address: formData.address,
-        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
-        phone: formData.phone,
-        email: formData.email,
-        website: formData.website,
-        price_range: formData.price_range,
-        opening_hours: formData.opening_hours,
-        cover_image: coverImageUrl,
-        gallery_images: galleryUrls,
-        amenities: formData.amenities.split(',').map(a => a.trim()).filter(a => a),
-        tags: formData.tags.split(',').map(t => t.trim()).filter(t => t)
+      // Crear FormData con todos los datos del negocio e imágenes
+      const submitFormData = new FormData()
+      
+      // Agregar datos del negocio
+      submitFormData.append('name', formData.name)
+      submitFormData.append('category', formData.category)
+      submitFormData.append('description', formData.description)
+      submitFormData.append('address', formData.address)
+      
+      if (formData.latitude) submitFormData.append('latitude', formData.latitude)
+      if (formData.longitude) submitFormData.append('longitude', formData.longitude)
+      if (formData.phone) submitFormData.append('phone', formData.phone)
+      if (formData.email) submitFormData.append('email', formData.email)
+      if (formData.website) submitFormData.append('website', formData.website)
+      if (formData.opening_hours) submitFormData.append('opening_hours', formData.opening_hours)
+      
+      submitFormData.append('price_range', formData.price_range.toString())
+      
+      // Agregar amenities como JSON string
+      const amenitiesList = formData.amenities.split(',').map(a => a.trim()).filter(a => a)
+      if (amenitiesList.length > 0) {
+        submitFormData.append('amenities', JSON.stringify(amenitiesList))
       }
+      
+      // Agregar tags como JSON string
+      const tagsList = formData.tags.split(',').map(t => t.trim()).filter(t => t)
+      if (tagsList.length > 0) {
+        submitFormData.append('tags', JSON.stringify(tagsList))
+      }
+      
+      // Agregar imagen de portada
+      submitFormData.append('cover_image', coverImage.file)
+      
+      // Agregar imágenes de galería
+      galleryImages.forEach((img) => {
+        submitFormData.append('gallery_images', img.file)
+      })
 
       // Crear negocio
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/businesses/owner/create/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(businessData)
+        body: submitFormData
       })
 
       if (!response.ok) {
