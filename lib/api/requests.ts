@@ -8,10 +8,17 @@ const API_URL = env.apiEndpoint
 
 const getAuthHeaders = () => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-  return {
+  console.log('🔑 Token en getAuthHeaders:', token ? 'Token encontrado' : 'No hay token')
+  
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
   }
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  
+  return headers
 }
 
 export interface Business {
