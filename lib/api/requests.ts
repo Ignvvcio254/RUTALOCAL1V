@@ -39,7 +39,7 @@ export interface BusinessStats {
 }
 
 export async function getBusinessById(id: string): Promise<Business> {
-  const response = await fetch(`${API_URL}/api/businesses/owner/my-businesses/${id}/dashboard/`, {
+  const response = await fetch(`${API_URL}/businesses/owner/my-businesses/${id}/dashboard/`, {
     headers: getAuthHeaders(),
   })
 
@@ -52,7 +52,7 @@ export async function getBusinessById(id: string): Promise<Business> {
 }
 
 export async function getBusinessStats(id: string): Promise<BusinessStats> {
-  const response = await fetch(`${API_URL}/api/businesses/owner/my-businesses/${id}/dashboard/`, {
+  const response = await fetch(`${API_URL}/businesses/owner/my-businesses/${id}/dashboard/`, {
     headers: getAuthHeaders(),
   })
 
@@ -93,7 +93,7 @@ export async function getBusinessStats(id: string): Promise<BusinessStats> {
 }
 
 export async function getOwnerBusinesses(): Promise<Business[]> {
-  const response = await fetch(`${API_URL}/api/businesses/owner/my-businesses/`, {
+  const response = await fetch(`${API_URL}/businesses/owner/my-businesses/`, {
     headers: getAuthHeaders(),
   })
 
@@ -108,7 +108,7 @@ export async function getOwnerBusinesses(): Promise<Business[]> {
 export async function createBusiness(formData: FormData): Promise<Business> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
   
-  const response = await fetch(`${API_URL}/api/businesses/owner/my-businesses/create/`, {
+  const response = await fetch(`${API_URL}/businesses/owner/my-businesses/create/`, {
     method: 'POST',
     headers: {
       'Authorization': token ? `Bearer ${token}` : '',
@@ -132,7 +132,7 @@ export async function uploadBusinessImage(file: File): Promise<{ url: string }> 
 
   console.log('📤 Subiendo imagen de portada...')
 
-  const response = await fetch(`${API_URL}/api/media/business/upload/`, {
+  const response = await fetch(`${API_URL}/media/business/upload/`, {
     method: 'POST',
     headers: {
       'Authorization': token ? `Bearer ${token}` : '',
