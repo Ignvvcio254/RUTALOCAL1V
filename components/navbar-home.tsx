@@ -39,7 +39,9 @@ export function NavbarHome() {
     window.dispatchEvent(new CustomEvent('toggle-chatbot', { detail: { open: true } }))
   }
 
-  const handleLoginClick = () => {
+  const handleLoginClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     console.log('🔐 Login button clicked, navigating to /login')
     console.log('🔍 Current pathname:', window.location.pathname)
     try {
