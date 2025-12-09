@@ -148,11 +148,11 @@ export default function CreateBusinessPage() {
 
   const uploadImageToCloudinary = async (file: File): Promise<string> => {
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('image', file)
 
     const token = TokenManager.getAccessToken()
     
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/businesses/upload-image/`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/media/business/upload/`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -161,11 +161,12 @@ export default function CreateBusinessPage() {
     })
 
     if (!response.ok) {
-      throw new Error('Error al subir imagen')
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.error || 'Error al subir imagen')
     }
 
     const data = await response.json()
-    return data.url
+    return data.url || data.data?.url || data.image_url
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
