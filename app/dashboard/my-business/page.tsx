@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
+import { TokenManager } from '@/lib/auth/token-manager'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Store, Plus, Eye, Star, Heart, MapPin, Clock, CheckCircle, XCircle } from 'lucide-react'
@@ -45,23 +46,58 @@ export default function MyBusinessesPage() {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('accessToken')
+      // Usar TokenManager para obtener el token
+      const token = TokenManager.getAccessToken()
+      
+      if (!token) {
+        console.error('❌ No token found - redirecting to login')
+        router.push('/login')
+        return
+      }
+      
+      console.log('✅ Token found, fetching owner data...')
       
       // Obtener perfil
       const profileRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/businesses/owner/profile/`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       })
+      
+      if (!profileRes.ok) {
+        console.error('❌ Profile fetch failed:', profileRes.status, profileRes.statusText)
+        if (profileRes.status === 401) {
+          console.log('🔄 Token expired, redirecting to login...')
+          TokenManager.clearTokens()
+          router.push('/login')
+          return
+        }
+        throw new Error(`Failed to fetch profile: ${profileRes.statusText}`)
+      }
+      
       const profileData = await profileRes.json()
+      console.log('✅ Profile loaded:', profileData)
       setProfile(profileData)
 
       // Obtener negocios
       const businessesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/businesses/owner/my-businesses/`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       })
+      
+      if (!businessesRes.ok) {
+        console.error('❌ Businesses fetch failed:', businessesRes.status, businessesRes.statusText)
+        throw new Error(`Failed to fetch businesses: ${businessesRes.statusText}`)
+      }
+      
       const businessesData = await businessesRes.json()
+      console.log('✅ Businesses loaded:', businessesData)
       setBusinesses(businessesData)
     } catch (error) {
-      console.error('Error:', error)
+      console.error('❌ Error fetching data:', error)
     } finally {
       setLoading(false)
     }
