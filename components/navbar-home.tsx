@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Map, Route, Bot, Bell, User, LogOut, MapPin, Search } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -22,9 +22,31 @@ export function NavbarHome() {
   const router = useRouter()
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
+  // Debug logs
+  useEffect(() => {
+    console.log('🔍 NavbarHome Debug:', {
+      isAuthenticated,
+      user,
+      hasUser: !!user,
+      userName: user?.name,
+      userEmail: user?.email
+    })
+  }, [isAuthenticated, user])
+
   const handleBotClick = () => {
+    console.log('🤖 Bot button clicked')
     // Trigger custom event to open chatbot globally
     window.dispatchEvent(new CustomEvent('toggle-chatbot', { detail: { open: true } }))
+  }
+
+  const handleLoginClick = () => {
+    console.log('🔐 Login button clicked, navigating to /login')
+    router.push('/login')
+  }
+
+  const handleLogout = () => {
+    console.log('👋 Logout clicked')
+    logout()
   }
 
   return (
@@ -133,7 +155,12 @@ export function NavbarHome() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-0 hover:bg-transparent">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="p-0 hover:bg-transparent"
+                    onClick={() => console.log('👤 Avatar/Profile button clicked (authenticated)')}
+                  >
                     <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
                       <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-semibold">
                         {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
@@ -150,31 +177,34 @@ export function NavbarHome() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard">Mi Dashboard</Link>
+                    <Link href="/dashboard" onClick={() => console.log('📊 Dashboard clicked')}>Mi Dashboard</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">Mi Perfil</Link>
+                    <Link href="/profile" onClick={() => console.log('👤 Profile clicked')}>Mi Perfil</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/builder">Mis Rutas</Link>
+                    <Link href="/builder" onClick={() => console.log('🛣️ Builder clicked')}>Mis Rutas</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600">
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
                     <LogOut className="w-4 h-4 mr-2" />
                     Cerrar Sesión
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/login">
-                <Button variant="ghost" size="sm" className="p-0 hover:bg-transparent">
-                  <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
-                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
-                      <User className="w-4 h-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </Link>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-0 hover:bg-transparent"
+                onClick={handleLoginClick}
+              >
+                <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
+                  <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                    <User className="w-4 h-4" />
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
             )}
           </div>
         </div>

@@ -26,15 +26,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Cargar usuario al iniciar
   useEffect(() => {
     const loadUser = async () => {
+      console.log('🔄 AuthContext: Loading user...');
       try {
         if (AuthService.hasActiveSession()) {
+          console.log('✅ AuthContext: Active session found');
           const currentUser = await AuthService.getCurrentUser();
+          console.log('👤 AuthContext: User loaded:', currentUser?.email);
           setUser(currentUser);
+        } else {
+          console.log('❌ AuthContext: No active session');
         }
-      } catch {
+      } catch (error) {
+        console.error('❌ AuthContext: Error loading user:', error);
         TokenManager.clearTokens();
       } finally {
         setIsLoading(false);
+        console.log('✅ AuthContext: Loading complete');
       }
     };
 
