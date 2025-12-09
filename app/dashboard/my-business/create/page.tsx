@@ -213,7 +213,7 @@ export default function CreateBusinessPage() {
       })
 
       // Crear negocio
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/businesses/owner/create/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/businesses/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
