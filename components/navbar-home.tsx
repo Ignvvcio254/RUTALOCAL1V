@@ -39,20 +39,6 @@ export function NavbarHome() {
     window.dispatchEvent(new CustomEvent('toggle-chatbot', { detail: { open: true } }))
   }
 
-  const handleLoginClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    console.log('🔐 Login button clicked, navigating to /login')
-    console.log('🔍 Current pathname:', window.location.pathname)
-    try {
-      // Usar window.location para navegación más directa
-      window.location.href = '/login'
-      console.log('✅ Navigation initiated')
-    } catch (error) {
-      console.error('❌ Navigation error:', error)
-    }
-  }
-
   const handleLogout = () => {
     console.log('👋 Logout clicked')
     logout()
@@ -164,18 +150,11 @@ export function NavbarHome() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="p-0 hover:bg-transparent"
-                    onClick={() => console.log('👤 Avatar/Profile button clicked (authenticated)')}
-                  >
-                    <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
-                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-semibold">
-                        {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
+                  <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-semibold">
+                      {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
@@ -186,13 +165,13 @@ export function NavbarHome() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard" onClick={() => console.log('📊 Dashboard clicked')}>Mi Dashboard</Link>
+                    <Link href="/dashboard">Mi Dashboard</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/profile" onClick={() => console.log('👤 Profile clicked')}>Mi Perfil</Link>
+                    <Link href="/profile">Mi Perfil</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/builder" onClick={() => console.log('🛣️ Builder clicked')}>Mis Rutas</Link>
+                    <Link href="/builder">Mis Rutas</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
@@ -202,19 +181,13 @@ export function NavbarHome() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button 
-                type="button"
-                variant="ghost" 
-                size="sm" 
-                className="p-0 hover:bg-transparent"
-                onClick={handleLoginClick}
-              >
+              <Link href="/login">
                 <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
                   <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
                     <User className="w-4 h-4" />
                   </AvatarFallback>
                 </Avatar>
-              </Button>
+              </Link>
             )}
           </div>
         </div>
