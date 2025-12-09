@@ -7,7 +7,7 @@ import { env } from '../env'
 const API_URL = env.apiEndpoint
 
 const getAuthHeaders = () => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+  const token = typeof window !== 'undefined' ? localStorage.getItem(env.storage.tokenKey) : null
   console.log('🔑 Token en getAuthHeaders:', token ? 'Token encontrado' : 'No hay token')
   
   const headers: Record<string, string> = {
