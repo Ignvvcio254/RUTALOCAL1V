@@ -233,7 +233,7 @@ export default function CreateBusinessPage() {
       setUploadingImages(false)
 
       // 3. Crear negocio con las URLs de las imágenes
-      console.log('📝 Creando negocio...')
+      console.log('📝 Creando negocio con las imágenes subidas...')
       const businessData: any = {
         name: formData.name,
         description: formData.description,
