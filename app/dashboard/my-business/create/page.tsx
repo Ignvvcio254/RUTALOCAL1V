@@ -26,18 +26,14 @@ import {
 import Link from 'next/link'
 import Image from 'next/image'
 
-// Categorías disponibles
-const CATEGORIES = [
-  { value: 'hospedaje', label: 'Hospedaje' },
-  { value: 'gastronomia', label: 'Gastronomía' },
-  { value: 'entretenimiento', label: 'Entretenimiento' },
-  { value: 'compras', label: 'Compras' },
-  { value: 'servicios', label: 'Servicios' },
-  { value: 'salud', label: 'Salud y Bienestar' },
-  { value: 'educacion', label: 'Educación' },
-  { value: 'deportes', label: 'Deportes' },
-  { value: 'otros', label: 'Otros' }
-]
+// Categorías disponibles (se cargarán dinámicamente del backend)
+interface Category {
+  id: string
+  name: string
+  slug: string
+  icon: string
+  color: string
+}
 
 // Rangos de precio
 const PRICE_RANGES = [
@@ -58,6 +54,7 @@ export default function CreateBusinessPage() {
   const [loading, setLoading] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [categories, setCategories] = useState<Category[]>([])
   
   // Form data
   const [formData, setFormData] = useState({
@@ -83,7 +80,23 @@ export default function CreateBusinessPage() {
   useEffect(() => {
     if (!user) {
       router.push('/login')
+      return
     }
+
+    // Cargar categorías del backend
+    const loadCategories = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/businesses/categories/`)
+        if (response.ok) {
+          const data = await response.json()
+          setCategories(data.data || data)
+        }
+      } catch (error) {
+        console.error('Error loading categories:', error)
+      }
+    }
+
+    loadCategories()
   }, [user, router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -174,66 +187,100 @@ export default function CreateBusinessPage() {
 
       setUploadingImages(true)
 
-      // Crear FormData con todos los datos del negocio e imágenes
-      const submitFormData = new FormData()
+      // 1. Subir imagen de portada a Cloudinary
+      console.log('📤 Subiendo imagen de portada...')
+      const coverFormData = new FormData()
+      coverFormData.append('image', coverImage.file)
       
-      // Agregar datos del negocio
-      submitFormData.append('name', formData.name)
-      submitFormData.append('category', formData.category)
-      submitFormData.append('description', formData.description)
-      submitFormData.append('address', formData.address)
-      
-      if (formData.latitude) submitFormData.append('latitude', formData.latitude)
-      if (formData.longitude) submitFormData.append('longitude', formData.longitude)
-      if (formData.phone) submitFormData.append('phone', formData.phone)
-      if (formData.email) submitFormData.append('email', formData.email)
-      if (formData.website) submitFormData.append('website', formData.website)
-      if (formData.opening_hours) submitFormData.append('opening_hours', formData.opening_hours)
-      
-      submitFormData.append('price_range', formData.price_range.toString())
-      
-      // Agregar amenities como JSON string
-      const amenitiesList = formData.amenities.split(',').map(a => a.trim()).filter(a => a)
-      if (amenitiesList.length > 0) {
-        submitFormData.append('amenities', JSON.stringify(amenitiesList))
-      }
-      
-      // Agregar tags como JSON string
-      const tagsList = formData.tags.split(',').map(t => t.trim()).filter(t => t)
-      if (tagsList.length > 0) {
-        submitFormData.append('tags', JSON.stringify(tagsList))
-      }
-      
-      // Agregar imagen de portada
-      submitFormData.append('cover_image', coverImage.file)
-      
-      // Agregar imágenes de galería
-      galleryImages.forEach((img) => {
-        submitFormData.append('gallery_images', img.file)
-      })
-
-      // Crear negocio
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/businesses/`, {
+      const coverResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/media/business/upload/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
         },
-        body: submitFormData
+        body: coverFormData
+      })
+
+      if (!coverResponse.ok) {
+        throw new Error('Error al subir imagen de portada')
+      }
+
+      const coverData = await coverResponse.json()
+      const coverImageUrl = coverData.data.url
+      console.log('✅ Imagen de portada subida:', coverImageUrl)
+
+      // 2. Subir imágenes de galería
+      const galleryUrls: string[] = []
+      for (let i = 0; i < galleryImages.length; i++) {
+        console.log(`📤 Subiendo imagen ${i + 1}/${galleryImages.length}...`)
+        const galleryFormData = new FormData()
+        galleryFormData.append('image', galleryImages[i].file)
+        
+        const galleryResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/media/business/upload/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: galleryFormData
+        })
+
+        if (galleryResponse.ok) {
+          const galleryData = await galleryResponse.json()
+          galleryUrls.push(galleryData.data.url)
+        }
+      }
+      console.log('✅ Imágenes de galería subidas:', galleryUrls)
+
+      setUploadingImages(false)
+
+      // 3. Crear negocio con las URLs de las imágenes
+      console.log('📝 Creando negocio...')
+      const businessData: any = {
+        name: formData.name,
+        description: formData.description,
+        short_description: formData.description.substring(0, 200),
+        category: formData.category,
+        address: formData.address,
+        neighborhood: formData.address.split(',')[0] || '',
+        comuna: formData.address.split(',')[1]?.trim() || 'Santiago',
+        phone: formData.phone,
+        email: formData.email,
+        website: formData.website,
+        price_range: formData.price_range,
+        cover_image: coverImageUrl,
+        images: galleryUrls,
+        latitude: formData.latitude || '-33.4372',
+        longitude: formData.longitude || '-70.6506',
+        hours: {}
+      }
+
+      // Agregar campos opcionales
+      if (formData.opening_hours) {
+        businessData.hours = { general: formData.opening_hours }
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/businesses/owner/my-businesses/create/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(businessData)
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || 'Error al crear el negocio')
+        throw new Error(errorData.error || errorData.message || 'Error al crear el negocio')
       }
 
-      const newBusiness = await response.json()
-      console.log('✅ Negocio creado:', newBusiness)
+      const result = await response.json()
+      console.log('✅ Negocio creado:', result)
 
       // Redirigir al dashboard del negocio
-      router.push(`/dashboard/my-business/${newBusiness.id}`)
+      router.push('/dashboard/my-business')
     } catch (error) {
       console.error('❌ Error:', error)
       setError(error instanceof Error ? error.message : 'Error al crear el negocio')
+    } finally {
       setLoading(false)
       setUploadingImages(false)
     }
@@ -305,8 +352,8 @@ export default function CreateBusinessPage() {
                   required
                 >
                   <option value="">Selecciona una categoría</option>
-                  {CATEGORIES.map(cat => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  {categories.map(cat => (
+                    <option key={cat.slug} value={cat.slug}>{cat.name}</option>
                   ))}
                 </select>
               </div>
