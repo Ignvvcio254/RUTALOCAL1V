@@ -133,13 +133,13 @@ export function NavbarHome() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="focus:outline-none">
+                  <Button variant="ghost" size="sm" className="p-0 hover:bg-transparent">
                     <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
                       <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-semibold">
                         {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
-                  </button>
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
@@ -166,16 +166,15 @@ export function NavbarHome() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <button 
-                onClick={() => router.push('/login')}
-                className="focus:outline-none"
-              >
-                <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
-                  <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
-                    <User className="w-4 h-4" />
-                  </AvatarFallback>
-                </Avatar>
-              </button>
+              <Link href="/login">
+                <Button variant="ghost" size="sm" className="p-0 hover:bg-transparent">
+                  <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                      <User className="w-4 h-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </Link>
             )}
           </div>
         </div>
