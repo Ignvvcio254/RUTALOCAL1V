@@ -48,7 +48,7 @@ export interface BusinessStats {
   rating_distribution: { stars: number; count: number }[]
 }
 
-export async function getBusinessById(id: string): Promise<Business> {
+export async function getBusinessById(id: string): Promise<any> {
   const response = await fetch(`${API_URL}/businesses/owner/my-businesses/${id}/dashboard/`, {
     headers: getAuthHeaders(),
   })
@@ -58,7 +58,7 @@ export async function getBusinessById(id: string): Promise<Business> {
   }
 
   const data = await response.json()
-  return data.business
+  return data
 }
 
 export async function getBusinessStats(id: string): Promise<BusinessStats> {

@@ -40,47 +40,59 @@ import {
   Cell,
 } from "recharts";
 
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string;
+  color: string;
+  description: string;
+  business_count: number;
+}
+
 interface Business {
   id: string;
   name: string;
   description: string;
-  category: string;
-  rating: number;
-  photos: string[];
-  cover_photo: string;
+  category: Category;
+  rating: string;
+  images: string[];
+  cover_image: string;
   address: string;
   phone?: string;
   website?: string;
-  opening_hours?: any;
+  hours?: any;
   created_at: string;
 }
 
 interface Stats {
   views: number;
-  likes: number;
-  reviews_count: number;
   rating: number;
-  views_history: { date: string; count: number }[];
-  rating_distribution: { stars: number; count: number }[];
+  review_count: number;
+  favorites_count: number;
+  visits_count: number;
+  status: string;
+}
+
+interface DashboardData {
+  business: Business;
+  stats: Stats;
+  recent_reviews: any[];
 }
 
 export default function BusinessDashboard() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const businessId = params.id as string;
-        const businessData = await getBusinessById(businessId);
-        setBusiness(businessData);
-
-        const statsData = await getBusinessStats(businessId);
-        setStats(statsData);
+        const data = await getBusinessById(businessId);
+        setDashboardData(data);
       } catch (error) {
         console.error("❌ Error:", error);
       } finally {
@@ -92,6 +104,9 @@ export default function BusinessDashboard() {
       fetchData();
     }
   }, [params.id]);
+
+  const business = dashboardData?.business;
+  const stats = dashboardData?.stats;
 
   if (loading) {
     return (
@@ -136,18 +151,18 @@ export default function BusinessDashboard() {
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-6">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={business.cover_photo} alt={business.name} />
+              <AvatarImage src={business.cover_image} alt={business.name} />
               <AvatarFallback>{business.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <div className="flex items-start justify-between">
                 <div>
                   <h1 className="text-3xl font-bold">{business.name}</h1>
-                  <Badge className="mt-2">{business.category}</Badge>
+                  <Badge className="mt-2">{business.category.name}</Badge>
                 </div>
                 <div className="flex items-center gap-1">
                   <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <span className="font-bold">{typeof business.rating === 'number' ? business.rating.toFixed(1) : "0.0"}</span>
+                  <span className="font-bold">{parseFloat(business.rating || "0").toFixed(1)}</span>
                 </div>
               </div>
               <p className="text-muted-foreground mt-3">{business.description}</p>
@@ -198,7 +213,7 @@ export default function BusinessDashboard() {
             <Heart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.likes || 0}</div>
+            <div className="text-2xl font-bold">{stats?.favorites_count || 0}</div>
             <p className="text-xs text-muted-foreground">
               <TrendingUp className="inline h-3 w-3 mr-1" />
               +15.3% desde el mes pasado
@@ -212,7 +227,7 @@ export default function BusinessDashboard() {
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.reviews_count || 0}</div>
+            <div className="text-2xl font-bold">{stats?.review_count || 0}</div>
             <p className="text-xs text-muted-foreground">
               <TrendingUp className="inline h-3 w-3 mr-1" />
               +8 nuevas este mes
@@ -226,8 +241,8 @@ export default function BusinessDashboard() {
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{typeof stats?.rating === 'number' ? stats.rating.toFixed(1) : "0.0"}</div>
-            <p className="text-xs text-muted-foreground">Promedio de {stats?.reviews_count || 0} reseñas</p>
+            <div className="text-2xl font-bold">{stats?.rating?.toFixed(1) || "0.0"}</div>
+            <p className="text-xs text-muted-foreground">Promedio de {stats?.review_count || 0} reseñas</p>
           </CardContent>
         </Card>
       </div>
@@ -245,15 +260,10 @@ export default function BusinessDashboard() {
               <CardTitle>Vistas de los últimos 7 días</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={stats?.views_history || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              <div className="text-center py-12 text-muted-foreground">
+                <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Los datos históricos estarán disponibles próximamente</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -264,29 +274,24 @@ export default function BusinessDashboard() {
               <CardTitle>Distribución de calificaciones</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stats?.rating_distribution || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="stars" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#3b82f6" />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="text-center py-12 text-muted-foreground">
+                <Star className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No hay reseñas todavía</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
       {/* Gallery */}
-      {business.photos && business.photos.length > 0 && (
+      {business.images && business.images.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Galería de fotos</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {business.photos.map((photo, index) => (
+              {business.images.map((photo, index) => (
                 <img
                   key={index}
                   src={photo}
