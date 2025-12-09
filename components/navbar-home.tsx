@@ -41,7 +41,14 @@ export function NavbarHome() {
 
   const handleLoginClick = () => {
     console.log('🔐 Login button clicked, navigating to /login')
-    router.push('/login')
+    console.log('🔍 Current pathname:', window.location.pathname)
+    try {
+      // Usar window.location para navegación más directa
+      window.location.href = '/login'
+      console.log('✅ Navigation initiated')
+    } catch (error) {
+      console.error('❌ Navigation error:', error)
+    }
   }
 
   const handleLogout = () => {
@@ -194,6 +201,7 @@ export function NavbarHome() {
               </DropdownMenu>
             ) : (
               <Button 
+                type="button"
                 variant="ghost" 
                 size="sm" 
                 className="p-0 hover:bg-transparent"
