@@ -89,10 +89,13 @@ export default function CreateBusinessPage() {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/businesses/categories/`)
         if (response.ok) {
           const data = await response.json()
-          setCategories(data.data || data)
+          // Asegurarse de que sea un array
+          const categoriesData = Array.isArray(data) ? data : (data.data || data.results || [])
+          setCategories(Array.isArray(categoriesData) ? categoriesData : [])
         }
       } catch (error) {
         console.error('Error loading categories:', error)
+        setCategories([])
       }
     }
 
@@ -266,6 +269,8 @@ export default function CreateBusinessPage() {
         },
         body: JSON.stringify(businessData)
       })
+
+      console.log('📡 Response status:', response.status)
 
       if (!response.ok) {
         const errorData = await response.json()
