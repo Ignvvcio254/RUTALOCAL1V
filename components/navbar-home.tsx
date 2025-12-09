@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Map, Route, Bot, Bell, User, LogOut, MapPin, Search } from "lucide-react"
+import { Map, Route, Bot, Bell, User, LogOut, MapPin, Search, Store } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
@@ -151,6 +151,12 @@ export function NavbarHome() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard">Mi Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/my-business">
+                      <Store className="w-4 h-4 mr-2" />
+                      Mis Negocios
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/profile">Mi Perfil</Link>
