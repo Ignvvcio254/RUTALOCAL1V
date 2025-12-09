@@ -219,7 +219,7 @@ export default function MyBusinessesPage() {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      {business.rating.toFixed(1)}
+                      {business.rating ? Number(business.rating).toFixed(1) : '0.0'}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Heart className="w-4 h-4" />
