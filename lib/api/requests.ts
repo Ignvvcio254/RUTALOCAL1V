@@ -159,3 +159,27 @@ export async function uploadBusinessImage(file: File): Promise<{ url: string }> 
   console.log('✅ Imagen subida:', data.url)
   return data
 }
+
+/**
+ * Update business information
+ */
+export async function updateBusiness(businessId: string, businessData: any) {
+  const token = typeof window !== 'undefined' 
+    ? localStorage.getItem('ruta_local_access_token') || sessionStorage.getItem('ruta_local_access_token')
+    : null
+
+  const response = await fetch(`${API_URL}/businesses/${businessId}/`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+    },
+    body: JSON.stringify(businessData),
+  })
+
+  if (!response.ok) {
+    throw new Error('Error al actualizar el negocio')
+  }
+
+  return await response.json()
+}
