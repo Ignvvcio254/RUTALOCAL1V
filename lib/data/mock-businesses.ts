@@ -26,7 +26,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['wifi', 'breakfast', 'parking'],
     experienceTags: ['boutique', 'wifi'],
     coordinates: [-33.4450, -70.6650],
-    image: '/placeholder-hotel-boutique.jpg',
+    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
     description: 'Hotel boutique con diseño contemporáneo en el corazón de Providencia',
   },
   {
@@ -45,7 +45,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['wifi', 'kitchen'],
     experienceTags: ['economico', 'wifi'],
     coordinates: [-33.4520, -70.6710],
-    image: '/placeholder-hostal.jpg',
+    image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800',
     description: 'Hostal acogedor con vistas al cerro San Cristóbal',
   },
   {
@@ -64,7 +64,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['pet-friendly', 'piscina', 'bbq'],
     experienceTags: ['familiar', 'pet-friendly', 'piscina'],
     coordinates: [-33.4600, -70.6800],
-    image: '/placeholder-cabana.jpg',
+    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800',
     description: 'Cabañas espaciosas perfectas para familias, con jardín y piscina',
   },
 
@@ -85,7 +85,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['wifi', 'outdoor-seating', 'artisan-coffee'],
     experienceTags: ['cafeterias', 'tradicional'],
     coordinates: [-33.4470, -70.6670],
-    image: '/cozy-coffee-shop-with-vinyl-records.jpg',
+    image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800',
     description: 'Café de especialidad con vinilos vintage y ambiente bohemio',
   },
   {
@@ -104,7 +104,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['vegan', 'gluten-free', 'organic'],
     experienceTags: ['vegano'],
     coordinates: [-33.4430, -70.6640],
-    image: '/placeholder-vegan-restaurant.jpg',
+    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
     description: 'Cocina plant-based con ingredientes orgánicos locales',
   },
   {
@@ -123,7 +123,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['takeaway', 'fast-service'],
     experienceTags: ['street-food', 'tradicional'],
     coordinates: [-33.4500, -70.6680],
-    image: '/placeholder-street-food.jpg',
+    image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800',
     description: 'Los mejores completos italianos de Santiago desde 1985',
   },
   {
@@ -142,7 +142,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['seafood', 'patio', 'reservations'],
     experienceTags: ['mariscos', 'internacional'],
     coordinates: [-33.4400, -70.6600],
-    image: '/placeholder-seafood.jpg',
+    image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800',
     description: 'Cebiche peruano auténtico con productos del día',
   },
 
@@ -163,7 +163,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['guided', 'group', 'español'],
     experienceTags: ['tours-guiados', 'historia'],
     coordinates: [-33.4480, -70.6690],
-    image: '/guided-city-tour-barrio-buildings.jpg',
+    image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800',
     description: 'Recorrido histórico por el bohemio Barrio Italia con guía local',
   },
   {
@@ -182,7 +182,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['hands-on', 'artisan', 'booking-required'],
     experienceTags: ['historia', 'museos'],
     coordinates: [-33.4550, -70.6720],
-    image: '/pottery-ceramic-art-studio-workshop.jpg',
+    image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800',
     description: 'Aprende cerámica tradicional chilena con artesanos locales',
   },
   {
@@ -201,7 +201,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['outdoor', 'exercise', 'scenic'],
     experienceTags: ['aventura', 'naturaleza', 'miradores'],
     coordinates: [-33.4260, -70.6340],
-    image: '/placeholder-trekking.jpg',
+    image: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800',
     description: 'Senderismo guiado al mirador con vistas 360° de Santiago',
   },
   {
@@ -220,7 +220,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['cultural', 'educational', 'free-entry'],
     experienceTags: ['museos', 'historia'],
     coordinates: [-33.4410, -70.6840],
-    image: '/placeholder-museum.jpg',
+    image: 'https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=800',
     description: 'Museo dedicado a la memoria histórica de Chile',
   },
   {
@@ -239,7 +239,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['viewpoint', 'photography', 'tickets'],
     experienceTags: ['miradores'],
     coordinates: [-33.4172, -70.6067],
-    image: '/placeholder-skyline.jpg',
+    image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800',
     description: 'El mirador más alto de Sudamérica en el piso 62',
   },
 
@@ -260,7 +260,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['indigenous-cuisine', 'fine-dining', 'reservations'],
     experienceTags: ['tradicional'],
     coordinates: [-33.4320, -70.6520],
-    image: '/placeholder-fine-dining.jpg',
+    image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800',
     description: 'Alta cocina ancestral de pueblos originarios de Chile',
   },
   {
@@ -279,7 +279,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['luxury', 'spa', 'rooftop-pool', 'restaurant'],
     experienceTags: ['boutique'],
     coordinates: [-33.4140, -70.6050],
-    image: '/placeholder-luxury-hotel.jpg',
+    image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800',
     description: 'Hotel 5 estrellas con piscina en la azotea y spa de lujo',
   },
   {
@@ -298,7 +298,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['water-sports', 'equipment-included', 'guide'],
     experienceTags: ['aventura', 'naturaleza'],
     coordinates: [-33.4380, -70.6450],
-    image: '/placeholder-kayak.jpg',
+    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
     description: 'Aventura en kayak por el río Mapocho urbano',
   },
   {
@@ -317,7 +317,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['market', 'seafood', 'traditional'],
     experienceTags: ['mariscos', 'tradicional', 'street-food'],
     coordinates: [-33.4370, -70.6510],
-    image: '/placeholder-market.jpg',
+    image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800',
     description: 'Mercado histórico con pescados y mariscos frescos',
   },
 ]
