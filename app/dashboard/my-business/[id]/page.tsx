@@ -147,7 +147,7 @@ export default function BusinessDashboard() {
                 </div>
                 <div className="flex items-center gap-1">
                   <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                  <span className="font-bold">{business.rating?.toFixed(1) || "0.0"}</span>
+                  <span className="font-bold">{typeof business.rating === 'number' ? business.rating.toFixed(1) : "0.0"}</span>
                 </div>
               </div>
               <p className="text-muted-foreground mt-3">{business.description}</p>
@@ -226,7 +226,7 @@ export default function BusinessDashboard() {
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.rating?.toFixed(1) || "0.0"}</div>
+            <div className="text-2xl font-bold">{typeof stats?.rating === 'number' ? stats.rating.toFixed(1) : "0.0"}</div>
             <p className="text-xs text-muted-foreground">Promedio de {stats?.reviews_count || 0} reseñas</p>
           </CardContent>
         </Card>
