@@ -21,7 +21,14 @@ export default function AuthCallback() {
         addDebugLog('🔄 [Callback] Iniciando proceso de callback...');
         addDebugLog(`📍 [Callback] URL actual: ${window.location.href}`);
 
-        // Obtener la sesión de Supabase
+        // Verificar si hay tokens en el hash (fallback de Supabase)
+        const hash = window.location.hash;
+        if (hash && hash.includes('access_token')) {
+          addDebugLog('🔍 [Callback] Tokens detectados en hash URL');
+          addDebugLog('💡 [Callback] Usando supabase.auth.getSession() para procesar...');
+        }
+
+        // Obtener la sesión de Supabase (procesa tokens del hash automáticamente)
         addDebugLog('📡 [Callback] Obteniendo sesión de Supabase...');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
@@ -32,6 +39,7 @@ export default function AuthCallback() {
 
         if (!session) {
           addDebugLog('❌ [Callback] No se encontró sesión activa');
+          addDebugLog('💡 [Callback] Esto puede ocurrir si el hash no tiene tokens válidos');
           throw new Error('No se recibió sesión de autenticación');
         }
 
