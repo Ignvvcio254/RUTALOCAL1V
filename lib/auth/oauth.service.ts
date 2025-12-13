@@ -1,26 +1,29 @@
 import { AuthService } from './auth.service';
 import type { LoginResponse } from './types';
+import { supabase } from '@/lib/supabase/client';
 
 /**
- * Servicio para autenticación OAuth (Google, GitHub, etc.)
+ * Servicio para autenticación OAuth (Google, GitHub, etc.) usando Supabase
  */
 export class OAuthService {
   private static readonly DEV_MODE = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
 
   /**
-   * Inicia el flujo de login con Google
+   * Inicia el flujo de login con Google usando Supabase Auth
    */
   static async loginWithGoogle(): Promise<void> {
-    console.log('🔍 OAuth Google - DEV_MODE:', this.DEV_MODE);
-    console.log('🔍 NEXT_PUBLIC_DEV_MODE:', process.env.NEXT_PUBLIC_DEV_MODE);
+    console.log('🚀 [OAuth] Iniciando login con Google...');
+    console.log('🔍 [OAuth] DEV_MODE:', this.DEV_MODE);
+    console.log('🔍 [OAuth] NEXT_PUBLIC_DEV_MODE:', process.env.NEXT_PUBLIC_DEV_MODE);
+    console.log('🔍 [OAuth] NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Configurado' : '❌ Falta');
+    console.log('🔍 [OAuth] NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Configurado' : '❌ Falta');
 
     // En desarrollo, simular login exitoso
     if (this.DEV_MODE) {
-      console.log('✅ Modo desarrollo detectado - Login automático con Google');
-      // Simular un pequeño delay como si estuviera redirigiendo
+      console.log('⚠️ [OAuth] Modo desarrollo detectado - Usando mock login');
+      console.log('💡 [OAuth] Para producción, establece NEXT_PUBLIC_DEV_MODE=false');
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Usar el servicio de auth para hacer login con credenciales mock de Google
       const mockGoogleUser = {
         email: 'usuario.google@gmail.com',
         password: 'google-oauth-mock',
@@ -31,23 +34,35 @@ export class OAuthService {
       return;
     }
 
-    // Producción: Redirigir a Google OAuth
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || `${window.location.origin}/auth/google/callback`;
+    try {
+      console.log('🔐 [OAuth] Iniciando flujo OAuth con Supabase...');
+      console.log('🔗 [OAuth] Redirect URL:', `${window.location.origin}/auth/callback`);
 
-    if (!clientId) {
-      throw new Error('Google Client ID no configurado. Configura NEXT_PUBLIC_GOOGLE_CLIENT_ID en .env.local');
+      // Usar Supabase para autenticación con Google
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        console.error('❌ [OAuth] Error al iniciar sesión con Supabase:', error);
+        throw error;
+      }
+
+      console.log('✅ [OAuth] Redirección a Google iniciada correctamente');
+      console.log('📍 [OAuth] URL de redirección:', data.url);
+
+      // Supabase automáticamente redirige al usuario
+    } catch (error) {
+      console.error('❌ [OAuth] Error en loginWithGoogle:', error);
+      throw error;
     }
-
-    const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-    googleAuthUrl.searchParams.append('client_id', clientId);
-    googleAuthUrl.searchParams.append('redirect_uri', redirectUri);
-    googleAuthUrl.searchParams.append('response_type', 'code');
-    googleAuthUrl.searchParams.append('scope', 'openid email profile');
-    googleAuthUrl.searchParams.append('access_type', 'offline');
-    googleAuthUrl.searchParams.append('prompt', 'consent');
-
-    window.location.href = googleAuthUrl.toString();
   }
 
   /**

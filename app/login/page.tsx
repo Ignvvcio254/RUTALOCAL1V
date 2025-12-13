@@ -43,18 +43,23 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    console.log('🚀 [Login Page] Click en botón Google Auth');
     setIsOAuthLoading(true);
+
     try {
-      // En modo desarrollo, usar login directo
-      await login({
-        email: 'usuario.google@gmail.com',
-        password: 'google-oauth-mock',
-        remember: true
-      });
-      // El login del contexto ya maneja la redirección
+      console.log('🔧 [Login Page] Importando OAuthService...');
+      const { OAuthService } = await import('@/lib/auth/oauth.service');
+
+      console.log('🔐 [Login Page] Llamando a OAuthService.loginWithGoogle()...');
+      await OAuthService.loginWithGoogle();
+
+      console.log('✅ [Login Page] OAuthService.loginWithGoogle() completado');
+      // Supabase redirigirá automáticamente a Google
+      // Después Google redirigirá a /auth/callback
     } catch (error) {
+      console.error('❌ [Login Page] Error en Google Auth:', error);
       toast({
-        title: "Error",
+        title: "Error al iniciar sesión con Google",
         description: error instanceof Error ? error.message : "No se pudo conectar con Google",
         variant: "destructive",
       });
