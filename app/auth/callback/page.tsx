@@ -34,8 +34,8 @@ export default function AuthCallbackPage() {
       console.log('  - access_token:', accessToken ? 'presente ✅' : 'ausente ❌')
       console.log('  - provider_token:', providerToken ? 'presente ✅' : 'ausente ❌')
 
-      if (!providerToken) {
-        throw new Error('No se recibió el token de Google OAuth')
+      if (!accessToken) {
+        throw new Error('No se recibió el token de autenticación de Supabase')
       }
 
       console.log('🌐 [Callback] Enviando token al backend:', `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`)
@@ -48,7 +48,7 @@ export default function AuthCallbackPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          access_token: providerToken, // Token de Google OAuth
+          access_token: accessToken, // Token JWT de Supabase
         }),
       })
 
