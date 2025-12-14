@@ -42,7 +42,7 @@ export default function AuthCallbackPage() {
 
       // Enviar token al backend Django
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
-      const response = await fetch(`${apiUrl}/api/auth/google`, {
+      const response = await fetch(`${apiUrl}/api/auth/google/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
