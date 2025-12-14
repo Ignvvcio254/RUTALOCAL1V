@@ -18,6 +18,7 @@ export default function AuthCallbackPage() {
     try {
       console.log('🔄 [Callback] Iniciando proceso de callback...')
       console.log('📍 [Callback] URL actual:', window.location.href)
+      console.log('🔧 [Callback] Método HTTP: POST')
 
       // Obtener fragmento del hash (#access_token=...)
       const hash = window.location.hash.substring(1) // Remover el #
