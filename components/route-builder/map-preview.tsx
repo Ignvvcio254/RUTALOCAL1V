@@ -98,6 +98,14 @@ export function MapPreview({ items, title }: MapPreviewProps) {
         console.log('🗺️ [MapPreview] Token valid:', !!MAPBOX_TOKEN && MAPBOX_TOKEN.length > 20)
         setMapLoaded(true)
         setIsLoading(false)
+        
+        // Forzar resize después de un pequeño delay para asegurar dimensiones correctas
+        setTimeout(() => {
+          if (map.current) {
+            map.current.resize()
+            console.log('🗺️ [MapPreview] Map resized, new dimensions:', mapContainer.current?.offsetWidth, 'x', mapContainer.current?.offsetHeight)
+          }
+        }, 100)
       })
 
       map.current.on("error", (e) => {
@@ -119,6 +127,19 @@ export function MapPreview({ items, title }: MapPreviewProps) {
       setMapLoaded(false)
     }
   }, [])
+
+  // Resize map cuando cambia el estado de expansión o el contenedor
+  useEffect(() => {
+    if (map.current && mapLoaded) {
+      // Dar tiempo al DOM para actualizar dimensiones
+      setTimeout(() => {
+        if (map.current) {
+          map.current.resize()
+          console.log('🗺️ [MapPreview] Resized on expand change')
+        }
+      }, 150)
+    }
+  }, [isExpanded, mapLoaded])
 
   // Actualizar marcadores y ruta cuando cambian los items
   useEffect(() => {
@@ -245,7 +266,7 @@ export function MapPreview({ items, title }: MapPreviewProps) {
   }, [items, mapLoaded, getColor])
 
   return (
-    <div className={`h-full flex flex-col bg-gray-100 relative ${isExpanded ? 'fixed inset-0 z-50' : ''}`}>
+    <div className={`h-full flex flex-col bg-gray-100 relative ${isExpanded ? 'fixed inset-0 z-50' : ''}`} style={{ minHeight: '400px' }}>
       {/* Header */}
       <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
         <div>
@@ -263,7 +284,7 @@ export function MapPreview({ items, title }: MapPreviewProps) {
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 relative min-h-[300px]">
+      <div className="flex-1 relative" style={{ minHeight: '300px' }}>
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-20">
             <div className="flex flex-col items-center gap-2">

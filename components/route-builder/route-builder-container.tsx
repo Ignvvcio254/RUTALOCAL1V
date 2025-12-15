@@ -269,8 +269,10 @@ export function RouteBuilderContainer() {
             </DndContext>
           </TabsContent>
 
-          <TabsContent value="map" className="flex-1 overflow-hidden m-0">
-            <MapPreview items={routeItems} title={routeTitle} />
+          <TabsContent value="map" className="flex-1 overflow-hidden m-0 h-[calc(100vh-56px)]">
+            <div className="h-full">
+              <MapPreview items={routeItems} title={routeTitle} />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -306,7 +308,7 @@ export function RouteBuilderContainer() {
         </div>
 
         {/* Right Panel - Map Preview */}
-        <div className="w-[25%] overflow-hidden">
+        <div className="w-[25%] h-full overflow-hidden">
           <MapPreview items={routeItems} title={routeTitle} />
         </div>
       </div>

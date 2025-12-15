@@ -146,6 +146,14 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
         console.log('🗺️ [RouteNavigationModal] Container size:', mapContainer.current?.offsetWidth, 'x', mapContainer.current?.offsetHeight);
         setMapLoaded(true);
         setIsLoadingMap(false);
+        
+        // Forzar resize después de un delay para asegurar dimensiones correctas
+        setTimeout(() => {
+          if (map.current) {
+            map.current.resize();
+            console.log('🗺️ [RouteNavigationModal] Map resized');
+          }
+        }, 200);
       });
 
       map.current.on('error', (e) => {
@@ -389,7 +397,7 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
 
         <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
           {/* Mapa */}
-          <div className="flex-1 relative min-h-[300px]">
+          <div className="flex-1 relative" style={{ minHeight: '350px' }}>
             {isLoadingMap && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-20">
                 <div className="flex flex-col items-center gap-2">
