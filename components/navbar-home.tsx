@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Map, Route, Bot, Bell, User, LogOut, MapPin, Search, Store } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
 import {
@@ -136,6 +136,13 @@ export function NavbarHome() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Avatar className="w-9 h-9 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all">
+                    {user?.avatar && (
+                      <AvatarImage 
+                        src={user.avatar} 
+                        alt={user?.name || 'Usuario'}
+                        className="object-cover"
+                      />
+                    )}
                     <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-semibold">
                       {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
                     </AvatarFallback>
@@ -143,9 +150,23 @@ export function NavbarHome() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.name}</p>
-                      <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10">
+                        {user?.avatar && (
+                          <AvatarImage 
+                            src={user.avatar} 
+                            alt={user?.name || 'Usuario'}
+                            className="object-cover"
+                          />
+                        )}
+                        <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-sm font-semibold">
+                          {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user?.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                      </div>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
