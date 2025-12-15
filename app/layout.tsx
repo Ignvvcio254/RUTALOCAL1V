@@ -5,6 +5,7 @@ import { AuthProvider } from '@/contexts/auth-context'
 import { Toaster } from '@/components/ui/toaster'
 import { ClientLayout } from '@/components/client-layout'
 import { RutaBot } from '@/components/ruta-bot'
+import { ErrorBoundary } from '@/components/error-boundary'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -41,14 +42,16 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className="font-sans antialiased" suppressHydrationWarning>
-        <AuthProvider>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-          <Toaster />
-          {/* Chatbot global - disponible en todas las páginas */}
-          <RutaBot />
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+            <Toaster />
+            {/* Chatbot global - disponible en todas las páginas */}
+            <RutaBot />
+          </AuthProvider>
+        </ErrorBoundary>
         <Analytics />
       </body>
     </html>

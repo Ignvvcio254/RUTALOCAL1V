@@ -4,20 +4,21 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
 import { TokenManager } from '@/lib/auth/token-manager'
+import { showError } from '@/lib/errors/error-handler'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { 
-  Store, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Globe, 
-  Clock, 
-  Upload, 
-  X, 
+import {
+  Store,
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
+  Clock,
+  Upload,
+  X,
   ImagePlus,
   Loader2,
   ArrowLeft,
@@ -283,7 +284,7 @@ export default function CreateBusinessPage() {
       // Redirigir al dashboard del negocio
       router.push('/dashboard/my-business')
     } catch (error) {
-      console.error('❌ Error:', error)
+      showError(error, "Error al Crear Negocio")
       setError(error instanceof Error ? error.message : 'Error al crear el negocio')
     } finally {
       setLoading(false)

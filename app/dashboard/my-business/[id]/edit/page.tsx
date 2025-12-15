@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { getBusinessById, updateBusiness, uploadBusinessImage } from "@/lib/api/requests";
+import { showError } from "@/lib/errors/error-handler";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -49,12 +50,7 @@ export default function EditBusinessPage() {
         setBusiness(data.business);
         setCoverImagePreview(data.business.cover_image);
       } catch (error) {
-        console.error("❌ Error:", error);
-        toast({
-          title: "Error",
-          description: "No se pudo cargar el negocio",
-          variant: "destructive",
-        });
+        showError(error, "Error al Cargar Negocio");
       } finally {
         setLoading(false);
       }
@@ -63,7 +59,7 @@ export default function EditBusinessPage() {
     if (params.id) {
       fetchBusiness();
     }
-  }, [params.id, toast]);
+  }, [params.id]);
 
   const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,12 +122,7 @@ export default function EditBusinessPage() {
 
       router.push(`/dashboard/my-business/${business.id}`);
     } catch (error) {
-      console.error("❌ Error:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el negocio",
-        variant: "destructive",
-      });
+      showError(error, "Error al Actualizar Negocio");
     } finally {
       setSaving(false);
     }
