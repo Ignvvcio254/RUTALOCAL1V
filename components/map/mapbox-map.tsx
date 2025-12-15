@@ -4,12 +4,16 @@ import { useEffect, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { env } from '@/lib/env'
-import { MAP_BUSINESSES, MAP_CATEGORIES, type MapBusiness } from '@/lib/mapbox-data'
-import { MapPin, Navigation } from 'lucide-react'
+import { MAP_CATEGORIES, type MapBusiness } from '@/lib/mapbox-data'
+import { MAP_CATEGORIES_EXTENDED } from '@/lib/adapters/map-business-adapter'
+import { Navigation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 // Initialize Mapbox
 mapboxgl.accessToken = env.maps.mapboxToken
+
+// Merge categories for backward compatibility
+const ALL_CATEGORIES = { ...MAP_CATEGORIES, ...MAP_CATEGORIES_EXTENDED }
 
 interface MapboxMapProps {
   selectedBusinessId?: string
@@ -20,7 +24,7 @@ interface MapboxMapProps {
 export function MapboxMap({
   selectedBusinessId,
   onBusinessSelect,
-  filteredBusinesses = MAP_BUSINESSES
+  filteredBusinesses = []
 }: MapboxMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
@@ -106,7 +110,9 @@ export function MapboxMap({
 
     // Add new markers
     filteredBusinesses.forEach(business => {
-      const category = MAP_CATEGORIES[business.category as keyof typeof MAP_CATEGORIES]
+      // Use merged categories with fallback
+      const category = ALL_CATEGORIES[business.category as keyof typeof ALL_CATEGORIES] 
+        || { color: '#6B7280', icon: '📍', verified: '#FFD700' }
       const isVerified = business.verified
       const isSelected = business.id === selectedBusinessId
 
