@@ -1,13 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { DndContext, type DragEndEvent } from "@dnd-kit/core"
 import { BusinessCatalog } from "./business-catalog"
 import { RouteTimeline } from "./route-timeline"
 import { MapPreview } from "./map-preview"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useRoutes, type CreateRouteData } from "@/hooks/use-routes"
+import { useAuth } from "@/contexts/auth-context"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { Business } from "@/lib/mock-data"
+import { useToast } from "@/hooks/use-toast"
+import type { Business } from "@/lib/filters/filter-utils"
+import { MapPin, Route, List } from "lucide-react"
 
 export interface RouteItem {
   id: string
@@ -22,6 +26,16 @@ export interface RouteItem {
   lng: number
 }
 
+const durationToMinutes = (duration: RouteItem["duration"]): number => {
+  const map: Record<string, number> = {
+    "15min": 15,
+    "30min": 30,
+    "1hr": 60,
+    "2hrs": 120
+  }
+  return map[duration] || 60
+}
+
 const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
   const R = 6371
   const dLat = ((lat2 - lat1) * Math.PI) / 180
@@ -33,17 +47,58 @@ const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: numbe
   return (R * c).toFixed(2)
 }
 
-const calculateTravelTime = (distance: string) => {
-  const walkingSpeed = 1.4
-  const minutes = Math.round((Number.parseFloat(distance) / walkingSpeed) * 60)
-  return `${minutes} min walk`
-}
-
 export function RouteBuilderContainer() {
   const [routeItems, setRouteItems] = useState<RouteItem[]>([])
   const [routeTitle, setRouteTitle] = useState("Mi Nueva Ruta")
   const [routeDescription, setRouteDescription] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
   const isMobile = useIsMobile()
+  
+  const { createRoute, loading: routeLoading } = useRoutes()
+  const { isAuthenticated } = useAuth()
+  const { toast } = useToast()
+
+  // Agregar negocio a la ruta (desde drag o click en mobile)
+  const addBusinessToRoute = useCallback((business: Business & { lat?: number; lng?: number }) => {
+    if (routeItems.length >= 15) {
+      toast({
+        title: "Límite alcanzado",
+        description: "Máximo 15 lugares por ruta",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Verificar que no esté duplicado
+    if (routeItems.some(item => item.businessId === business.id)) {
+      toast({
+        title: "Ya agregado",
+        description: "Este lugar ya está en tu ruta",
+        variant: "destructive"
+      })
+      return
+    }
+
+    const newItem: RouteItem = {
+      id: `item-${Date.now()}`,
+      businessId: business.id,
+      name: business.name,
+      category: business.subcategory || business.category,
+      image: business.image,
+      duration: "1hr",
+      rating: business.rating,
+      distance: business.distance,
+      lat: business.lat || business.coordinates?.[0] || -33.4372,
+      lng: business.lng || business.coordinates?.[1] || -70.6506,
+    }
+
+    setRouteItems(prev => [...prev, newItem])
+    
+    toast({
+      title: "Lugar agregado",
+      description: `${business.name} añadido a tu ruta`,
+    })
+  }, [routeItems, toast])
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { over, active } = event
@@ -51,25 +106,11 @@ export function RouteBuilderContainer() {
 
     const draggedData = active.data.current as {
       type: string
-      business: Business
+      business: Business & { lat?: number; lng?: number }
     }
+    
     if (draggedData?.type === "business" && over.id === "drop-zone") {
-      const newItem: RouteItem = {
-        id: `item-${Date.now()}`,
-        businessId: draggedData.business.id,
-        name: draggedData.business.name,
-        category: draggedData.business.category,
-        image: draggedData.business.image,
-        duration: "1hr",
-        rating: draggedData.business.rating,
-        distance: draggedData.business.distance,
-        lat: draggedData.business.lat,
-        lng: draggedData.business.lng,
-      }
-
-      if (routeItems.length < 15) {
-        setRouteItems([...routeItems, newItem])
-      }
+      addBusinessToRoute(draggedData.business)
     }
   }
 
@@ -113,29 +154,102 @@ export function RouteBuilderContainer() {
     return total.toFixed(1)
   }
 
+  // Guardar ruta en el backend
+  const handleSaveRoute = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Inicia sesión",
+        description: "Debes iniciar sesión para guardar rutas",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (routeItems.length < 2) {
+      toast({
+        title: "Mínimo 2 lugares",
+        description: "Agrega al menos 2 lugares para guardar tu ruta",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSaving(true)
+
+    try {
+      const routeData: CreateRouteData = {
+        name: routeTitle,
+        description: routeDescription,
+        is_public: false,
+        stops: routeItems.map((item, index) => ({
+          business_id: item.businessId,
+          order: index + 1,
+          duration: durationToMinutes(item.duration),
+          notes: ""
+        }))
+      }
+
+      console.log('📤 Saving route:', routeData)
+      const savedRoute = await createRoute(routeData)
+
+      if (savedRoute) {
+        toast({
+          title: "¡Ruta guardada!",
+          description: `"${routeTitle}" se ha guardado en tu perfil`,
+        })
+        
+        // Limpiar formulario
+        setRouteItems([])
+        setRouteTitle("Mi Nueva Ruta")
+        setRouteDescription("")
+      } else {
+        throw new Error("No se pudo guardar la ruta")
+      }
+    } catch (error) {
+      console.error('❌ Error saving route:', error)
+      toast({
+        title: "Error al guardar",
+        description: error instanceof Error ? error.message : "Intenta de nuevo más tarde",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Vista Mobile con tabs optimizados
   if (isMobile) {
     return (
-      <div className="h-screen bg-white">
-        <Tabs defaultValue="places" className="h-full flex flex-col">
-          <TabsList className="w-full rounded-none border-b">
-            <TabsTrigger value="places" className="flex-1">
-              Lugares
+      <div className="h-screen bg-white flex flex-col">
+        <Tabs defaultValue="places" className="flex-1 flex flex-col">
+          <TabsList className="w-full rounded-none border-b bg-white grid grid-cols-3 h-14">
+            <TabsTrigger value="places" className="flex flex-col items-center gap-1 text-xs py-2 data-[state=active]:bg-indigo-50">
+              <MapPin size={18} />
+              <span>Lugares</span>
             </TabsTrigger>
-            <TabsTrigger value="route" className="flex-1">
-              Mi Ruta
+            <TabsTrigger value="route" className="flex flex-col items-center gap-1 text-xs py-2 data-[state=active]:bg-indigo-50 relative">
+              <List size={18} />
+              <span>Mi Ruta</span>
+              {routeItems.length > 0 && (
+                <span className="absolute top-1 right-4 bg-indigo-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                  {routeItems.length}
+                </span>
+              )}
             </TabsTrigger>
-            <TabsTrigger value="map" className="flex-1">
-              Mapa
+            <TabsTrigger value="map" className="flex flex-col items-center gap-1 text-xs py-2 data-[state=active]:bg-indigo-50">
+              <Route size={18} />
+              <span>Mapa</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="places" className="flex-1 overflow-auto">
-            <DndContext onDragEnd={handleDragEnd}>
-              <BusinessCatalog />
-            </DndContext>
+          <TabsContent value="places" className="flex-1 overflow-hidden m-0">
+            <BusinessCatalog 
+              onAddBusiness={addBusinessToRoute}
+              isMobile={true}
+            />
           </TabsContent>
 
-          <TabsContent value="route" className="flex-1 overflow-auto p-4">
+          <TabsContent value="route" className="flex-1 overflow-auto m-0">
             <DndContext onDragEnd={handleDragEnd}>
               <RouteTimeline
                 items={routeItems}
@@ -148,11 +262,14 @@ export function RouteBuilderContainer() {
                 onDescriptionChange={setRouteDescription}
                 totalDuration={calculateRouteDuration()}
                 totalDistance={calculateTotalDistance()}
+                onSave={handleSaveRoute}
+                isSaving={isSaving || routeLoading}
+                isAuthenticated={isAuthenticated}
               />
             </DndContext>
           </TabsContent>
 
-          <TabsContent value="map" className="flex-1 overflow-auto">
+          <TabsContent value="map" className="flex-1 overflow-hidden m-0">
             <MapPreview items={routeItems} title={routeTitle} />
           </TabsContent>
         </Tabs>
@@ -160,6 +277,7 @@ export function RouteBuilderContainer() {
     )
   }
 
+  // Vista Desktop
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div className="flex h-screen overflow-hidden">
@@ -181,6 +299,9 @@ export function RouteBuilderContainer() {
             onDescriptionChange={setRouteDescription}
             totalDuration={calculateRouteDuration()}
             totalDistance={calculateTotalDistance()}
+            onSave={handleSaveRoute}
+            isSaving={isSaving || routeLoading}
+            isAuthenticated={isAuthenticated}
           />
         </div>
 

@@ -24,6 +24,9 @@ interface RouteTimelineProps {
   onDescriptionChange: (description: string) => void
   totalDuration: string
   totalDistance: string
+  onSave?: () => void
+  isSaving?: boolean
+  isAuthenticated?: boolean
 }
 
 function SortableRouteItem({
@@ -174,6 +177,9 @@ export function RouteTimeline({
   onDescriptionChange,
   totalDuration,
   totalDistance,
+  onSave,
+  isSaving,
+  isAuthenticated,
 }: RouteTimelineProps) {
   const { setNodeRef } = useDroppable({
     id: "drop-zone",
@@ -183,19 +189,24 @@ export function RouteTimeline({
   const [showAISuggestions, setShowAISuggestions] = useState(false)
 
   const handleSaveRoute = () => {
-    if (items.length < 2) {
-      toast({
-        title: "Mínimo 2 lugares",
-        description: "Agrega al menos 2 lugares para guardar tu ruta",
-        variant: "destructive",
-      })
-      return
-    }
+    if (onSave) {
+      onSave()
+    } else {
+      // Fallback si no hay callback
+      if (items.length < 2) {
+        toast({
+          title: "Mínimo 2 lugares",
+          description: "Agrega al menos 2 lugares para guardar tu ruta",
+          variant: "destructive",
+        })
+        return
+      }
 
-    toast({
-      title: "Ruta guardada",
-      description: `"${title}" ha sido guardada exitosamente`,
-    })
+      toast({
+        title: "Ruta guardada",
+        description: `"${title}" ha sido guardada exitosamente`,
+      })
+    }
   }
 
   const handleOptimizeRoute = () => {
@@ -328,18 +339,36 @@ export function RouteTimeline({
             </p>
           </div>
         )}
+
+        {/* Auth warning */}
+        {!isAuthenticated && items.length > 0 && (
+          <div className="mt-4 flex items-start gap-2 bg-blue-50 border border-blue-200 p-4 rounded-lg">
+            <AlertCircle size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-blue-700">
+              <a href="/login" className="font-semibold underline">Inicia sesión</a> para guardar tu ruta en tu perfil.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 p-6 flex gap-3">
-        <Button onClick={handleSaveRoute} className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600">
-          Guardar ruta
+      <div className="border-t border-gray-200 p-4 sm:p-6 flex flex-col sm:flex-row gap-3">
+        <Button 
+          onClick={handleSaveRoute} 
+          disabled={isSaving || items.length < 2}
+          className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 disabled:opacity-50"
+        >
+          {isSaving ? (
+            <>
+              <span className="animate-spin mr-2">⏳</span>
+              Guardando...
+            </>
+          ) : (
+            'Guardar ruta'
+          )}
         </Button>
-        <Button variant="outline" className="flex-1 bg-transparent">
+        <Button variant="outline" className="flex-1 bg-transparent" disabled={items.length === 0}>
           Compartir
-        </Button>
-        <Button variant="outline" className="flex-1 bg-transparent">
-          Vista previa
         </Button>
       </div>
     </div>
