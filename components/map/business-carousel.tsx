@@ -35,7 +35,7 @@ export function BusinessCarousel({
   }
 
   return (
-    <div className="md:hidden absolute bottom-2 left-0 right-0 z-10 px-2">
+    <div className="md:hidden absolute top-20 left-0 right-0 z-10 px-2">
       <div className="relative bg-white/95 backdrop-blur-md rounded-xl shadow-lg p-2">
         <div className="flex items-center justify-between mb-1.5">
           <h3 className="font-semibold text-xs text-gray-700">
