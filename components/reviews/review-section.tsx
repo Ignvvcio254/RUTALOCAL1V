@@ -68,7 +68,7 @@ export function ReviewSection({ businessId, businessName }: ReviewSectionProps) 
 
     setSubmitting(true)
     try {
-      const response = await createReview(businessId, { rating: newRating, content: newContent.trim() })
+      const response = await createReview(businessId, { rating: newRating, comment: newContent.trim() })
       setReviews((prev) => [response.data, ...prev])
       if (stats) {
         setStats({

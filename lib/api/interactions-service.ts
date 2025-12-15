@@ -64,7 +64,7 @@ export interface ReviewsResponse {
 export interface CreateReviewData {
   rating: number
   title?: string
-  content: string
+  comment: string  // Backend uses 'comment' not 'content'
 }
 
 /**
