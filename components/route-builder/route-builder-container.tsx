@@ -52,6 +52,7 @@ export function RouteBuilderContainer() {
   const [routeTitle, setRouteTitle] = useState("Mi Nueva Ruta")
   const [routeDescription, setRouteDescription] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const [activeTab, setActiveTab] = useState("places")
   const isMobile = useIsMobile()
   
   const { createRoute, loading: routeLoading } = useRoutes()
@@ -221,7 +222,7 @@ export function RouteBuilderContainer() {
   if (isMobile) {
     return (
       <div className="h-screen bg-white flex flex-col">
-        <Tabs defaultValue="places" className="flex-1 flex flex-col">
+        <Tabs defaultValue="places" className="flex-1 flex flex-col" onValueChange={(value) => setActiveTab(value)}>
           <TabsList className="w-full rounded-none border-b bg-white grid grid-cols-3 h-14">
             <TabsTrigger value="places" className="flex flex-col items-center gap-1 text-xs py-2 data-[state=active]:bg-indigo-50">
               <MapPin size={18} />
@@ -269,10 +270,8 @@ export function RouteBuilderContainer() {
             </DndContext>
           </TabsContent>
 
-          <TabsContent value="map" className="flex-1 overflow-hidden m-0 h-[calc(100vh-56px)]">
-            <div className="h-full">
-              <MapPreview items={routeItems} title={routeTitle} />
-            </div>
+          <TabsContent value="map" className="flex-1 m-0" style={{ height: 'calc(100vh - 56px)', minHeight: '400px' }}>
+            <MapPreview items={routeItems} title={routeTitle} isVisible={activeTab === 'map'} />
           </TabsContent>
         </Tabs>
       </div>

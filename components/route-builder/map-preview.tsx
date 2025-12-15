@@ -13,19 +13,22 @@ const MAPBOX_TOKEN = env.maps.mapboxToken
 interface MapPreviewProps {
   items: RouteItem[]
   title: string
+  isVisible?: boolean // Para detectar cuando el tab está activo
 }
 
 /**
  * MapPreview - Componente para previsualizar rutas en un mapa
  * Muestra marcadores numerados y líneas de conexión entre paradas
  */
-export function MapPreview({ items, title }: MapPreviewProps) {
+export function MapPreview({ items, title, isVisible = true }: MapPreviewProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
   const markersRef = useRef<mapboxgl.Marker[]>([])
   const [isExpanded, setIsExpanded] = useState(false)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [mapError, setMapError] = useState(false)
+  const initAttempts = useRef(0)
 
   // Centro por defecto: Santiago, Chile
   const defaultCenter: [number, number] = [env.maps.defaultCenter.lng, env.maps.defaultCenter.lat]
@@ -67,12 +70,33 @@ export function MapPreview({ items, title }: MapPreviewProps) {
     return [avgLng, avgLat]
   }, [items])
 
-  // Inicializar mapa
-  useEffect(() => {
-    if (!mapContainer.current || map.current) return
+  // Función para inicializar el mapa
+  const initializeMap = useCallback(() => {
+    if (!mapContainer.current) {
+      console.log('🗺️ [MapPreview] No container ref')
+      return false
+    }
+
+    // Verificar que el contenedor tenga dimensiones
+    const containerWidth = mapContainer.current.offsetWidth
+    const containerHeight = mapContainer.current.offsetHeight
+
+    console.log('🗺️ [MapPreview] Attempting init, dimensions:', containerWidth, 'x', containerHeight)
+
+    if (containerWidth === 0 || containerHeight === 0) {
+      console.log('🗺️ [MapPreview] Container has no dimensions yet')
+      return false
+    }
+
+    // Si ya hay un mapa, destruirlo primero
+    if (map.current) {
+      markersRef.current.forEach(marker => marker.remove())
+      markersRef.current = []
+      map.current.remove()
+      map.current = null
+    }
 
     console.log('🗺️ [MapPreview] Initializing map...')
-    console.log('🗺️ [MapPreview] Container exists:', !!mapContainer.current)
     console.log('🗺️ [MapPreview] Token length:', MAPBOX_TOKEN?.length || 0)
     console.log('🗺️ [MapPreview] Items count:', items.length)
 
@@ -94,52 +118,81 @@ export function MapPreview({ items, title }: MapPreviewProps) {
 
       map.current.on("load", () => {
         console.log('🗺️ [MapPreview] Map loaded successfully')
-        console.log('🗺️ [MapPreview] Container dimensions:', mapContainer.current?.offsetWidth, 'x', mapContainer.current?.offsetHeight)
-        console.log('🗺️ [MapPreview] Token valid:', !!MAPBOX_TOKEN && MAPBOX_TOKEN.length > 20)
+        console.log('🗺️ [MapPreview] Final dimensions:', mapContainer.current?.offsetWidth, 'x', mapContainer.current?.offsetHeight)
         setMapLoaded(true)
         setIsLoading(false)
-        
-        // Forzar resize después de un pequeño delay para asegurar dimensiones correctas
-        setTimeout(() => {
-          if (map.current) {
-            map.current.resize()
-            console.log('🗺️ [MapPreview] Map resized, new dimensions:', mapContainer.current?.offsetWidth, 'x', mapContainer.current?.offsetHeight)
-          }
-        }, 100)
+        setMapError(false)
       })
 
       map.current.on("error", (e) => {
         console.error("🗺️ [MapPreview] Mapbox error:", e)
         setIsLoading(false)
+        setMapError(true)
       })
+
+      return true
     } catch (error) {
       console.error('🗺️ [MapPreview] Error initializing map:', error)
       setIsLoading(false)
+      setMapError(true)
+      return false
     }
+  }, [items.length, calculateCenter])
+
+  // Inicializar mapa cuando el componente es visible y tiene dimensiones
+  useEffect(() => {
+    if (!isVisible) return
+    if (map.current && mapLoaded) return // Ya inicializado
+
+    // Intentar inicializar inmediatamente
+    if (initializeMap()) return
+
+    // Si no funciona, reintentar con delays
+    const retryDelays = [100, 300, 500, 1000]
+    const timeouts: NodeJS.Timeout[] = []
+
+    retryDelays.forEach((delay, index) => {
+      const timeout = setTimeout(() => {
+        if (!map.current || !mapLoaded) {
+          console.log(`🗺️ [MapPreview] Retry attempt ${index + 1}`)
+          initializeMap()
+        }
+      }, delay)
+      timeouts.push(timeout)
+    })
 
     return () => {
+      timeouts.forEach(t => clearTimeout(t))
+    }
+  }, [isVisible, initializeMap, mapLoaded])
+
+  // Resize map cuando cambia el estado de expansión o visibilidad
+  useEffect(() => {
+    if (!isVisible) return
+    
+    if (map.current && mapLoaded) {
+      // Dar tiempo al DOM para actualizar dimensiones
+      setTimeout(() => {
+        if (map.current) {
+          map.current.resize()
+          console.log('🗺️ [MapPreview] Resized on visibility/expand change')
+        }
+      }, 150)
+    }
+  }, [isExpanded, mapLoaded, isVisible])
+
+  // Cleanup al desmontar
+  useEffect(() => {
+    return () => {
+      console.log('🗺️ [MapPreview] Cleanup on unmount')
       markersRef.current.forEach(marker => marker.remove())
       markersRef.current = []
       if (map.current) {
         map.current.remove()
         map.current = null
       }
-      setMapLoaded(false)
     }
   }, [])
-
-  // Resize map cuando cambia el estado de expansión o el contenedor
-  useEffect(() => {
-    if (map.current && mapLoaded) {
-      // Dar tiempo al DOM para actualizar dimensiones
-      setTimeout(() => {
-        if (map.current) {
-          map.current.resize()
-          console.log('🗺️ [MapPreview] Resized on expand change')
-        }
-      }, 150)
-    }
-  }, [isExpanded, mapLoaded])
 
   // Actualizar marcadores y ruta cuando cambian los items
   useEffect(() => {
@@ -284,7 +337,7 @@ export function MapPreview({ items, title }: MapPreviewProps) {
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 relative" style={{ minHeight: '300px' }}>
+      <div className="flex-1 relative" style={{ minHeight: '300px', height: '100%' }}>
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-20">
             <div className="flex flex-col items-center gap-2">
@@ -293,11 +346,34 @@ export function MapPreview({ items, title }: MapPreviewProps) {
             </div>
           </div>
         )}
+
+        {mapError && !isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-20">
+            <div className="flex flex-col items-center gap-2 text-center p-4">
+              <MapPin size={48} className="text-red-400" />
+              <p className="text-sm text-gray-600">Error al cargar el mapa</p>
+              <button 
+                onClick={() => {
+                  setMapError(false)
+                  setIsLoading(true)
+                  initializeMap()
+                }}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700"
+              >
+                Reintentar
+              </button>
+            </div>
+          </div>
+        )}
         
-        <div ref={mapContainer} className="absolute inset-0" />
+        <div 
+          ref={mapContainer} 
+          className="absolute inset-0" 
+          style={{ width: '100%', height: '100%' }}
+        />
 
         {/* Placeholder when empty */}
-        {items.length === 0 && !isLoading && (
+        {items.length === 0 && !isLoading && !mapError && mapLoaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80 z-10">
             <div className="text-center">
               <MapPin size={48} className="text-gray-400 mx-auto mb-2" />
