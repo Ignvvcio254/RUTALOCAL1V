@@ -13,7 +13,7 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">1. Información que recopilamos</h2>
             <p className="text-gray-700">
               Recopilamos información que nos proporcionas directamente, como tu nombre, email y
-              preferencias cuando creas una cuenta en Ruta Local.
+              preferencias cuando creas una cuenta en RutaGo.
             </p>
           </section>
 

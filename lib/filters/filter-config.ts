@@ -133,7 +133,7 @@ export const ATTRIBUTE_FILTERS: AttributeFilter[] = [
     id: 'verified',
     label: 'Verificado',
     icon: '✓',
-    description: 'Verificado por RutaLocal',
+    description: 'Verificado por RutaGo',
   },
 ] as const;
 

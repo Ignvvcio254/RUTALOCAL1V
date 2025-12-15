@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { addFavorite, removeFavorite } from '@/lib/api/interactions-service'
 
-const FAVORITES_KEY = 'rutalocal_favorites'
+const FAVORITES_KEY = 'rutago_favorites'
 
 /**
  * useFavorites Hook - Fixed version

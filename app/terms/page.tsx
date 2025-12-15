@@ -12,14 +12,14 @@ export default function TermsPage() {
           <section className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-3">1. Aceptación de términos</h2>
             <p className="text-gray-700">
-              Al acceder y utilizar Ruta Local (Santiago), aceptas estar sujeto a estos términos y condiciones.
+              Al acceder y utilizar RutaGo (Santiago), aceptas estar sujeto a estos términos y condiciones.
             </p>
           </section>
 
           <section className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-3">2. Uso del servicio</h2>
             <p className="text-gray-700">
-              Ruta Local es una plataforma para descubrir emprendimientos locales en Santiago.
+              RutaGo es una plataforma para descubrir emprendimientos locales en Santiago.
               Te comprometes a utilizar el servicio de manera responsable y legal.
             </p>
           </section>

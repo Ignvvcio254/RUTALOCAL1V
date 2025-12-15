@@ -45,7 +45,7 @@ function DesignSystemContent() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="mx-auto max-w-6xl px-4">
         <header className="mb-12 text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900">Ruta Local Design System</h1>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900">RutaGo Design System</h1>
           <p className="mt-2 text-lg text-gray-600">Componentes reutilizables para la plataforma de turismo local</p>
         </header>
 

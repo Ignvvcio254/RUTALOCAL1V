@@ -116,7 +116,7 @@ export default function LoginPage() {
             <MapPin className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight animate-in fade-in slide-in-from-top-2 duration-500 delay-200">
-            Ruta Local
+            RutaGo
           </h1>
           <p className="text-slate-600 text-sm animate-in fade-in duration-500 delay-300">
             Descubre Santiago auténtico

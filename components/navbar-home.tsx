@@ -38,9 +38,9 @@ export function NavbarHome() {
             <div className="flex items-center gap-4">
               <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                 <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-                  <span className="text-white font-bold text-sm">RL</span>
+                  <span className="text-white font-bold text-sm">RG</span>
                 </div>
-                <span className="hidden sm:block font-bold text-gray-900 text-lg">Ruta Local</span>
+                <span className="hidden sm:block font-bold text-gray-900 text-lg">RutaGo</span>
               </Link>
 
               {/* Selector de Ubicación */}

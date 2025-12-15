@@ -17,7 +17,7 @@ const USE_MOCK_DATA =
 // Mock data para desarrollo
 const mockUser: AuthUser = {
   id: 'user-123',
-  email: 'demo@rutalocal.cl',
+  email: 'demo@rutago.cl',
   name: 'Usuario Demo',
   role: 'user',
   emailVerified: true,

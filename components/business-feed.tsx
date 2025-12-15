@@ -72,7 +72,7 @@ export function BusinessFeed() {
               Cargando negocios...
             </h3>
             <p className="text-gray-600">
-              Obteniendo los mejores locales de RutaLocal
+              Obteniendo los mejores locales de RutaGo
             </p>
           </div>
         </div>
@@ -114,7 +114,7 @@ export function BusinessFeed() {
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-6 h-6 text-indigo-600" />
               <h2 className="text-2xl font-bold text-gray-900">
-                Destacados en RutaLocal
+                Destacados en RutaGo
               </h2>
             </div>
             <p className="text-gray-600">

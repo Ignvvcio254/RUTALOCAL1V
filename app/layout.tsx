@@ -12,7 +12,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'SantiaGO - Ruta Local',
+  title: 'RutaGo - Descubre Santiago',
   description: 'Descubre Santiago auténtico con emprendimientos locales',
   generator: 'v0.app',
   icons: {

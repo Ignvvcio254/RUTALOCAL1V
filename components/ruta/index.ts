@@ -1,4 +1,4 @@
-// Ruta Local Design System - Component Exports
+// RutaGo Design System - Component Exports
 
 export {
   RutaButton,
