@@ -176,118 +176,127 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
     };
   }, [isOpen, route]);
 
-  // Dibujar ruta y marcadores cuando el mapa esté listo
+  // Obtener direcciones una sola vez cuando el mapa esté listo
+  useEffect(() => {
+    if (!map.current || !mapLoaded || !route || route.stops.length < 2) return;
+    
+    // Solo fetch si no tenemos routeGeometry
+    if (routeGeometry) return;
+    
+    console.log('🗺️ [RouteNavigationModal] Fetching directions once...');
+    fetchDirections(route.stops);
+  }, [mapLoaded, route?.id]); // Solo depende del ID de ruta y mapLoaded
+
+  // Dibujar marcadores y ruta cuando tengamos los datos
   useEffect(() => {
     if (!map.current || !mapLoaded || !route || route.stops.length === 0) return;
 
-    const drawRoute = async () => {
-      // Limpiar marcadores anteriores
-      markersRef.current.forEach(m => m.remove());
-      markersRef.current = [];
+    console.log('🗺️ [RouteNavigationModal] Drawing markers and route');
+    
+    // Limpiar marcadores anteriores
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
 
-      // Obtener ruta de direcciones
-      const directions = await fetchDirections(route.stops);
+    // Agregar marcadores
+    route.stops.forEach((stop, index) => {
+      const el = document.createElement('div');
+      const isCurrentStop = index === currentStopIndex;
+      
+      el.innerHTML = `
+        <div style="
+          width: ${isCurrentStop ? '40px' : '32px'};
+          height: ${isCurrentStop ? '40px' : '32px'};
+          background: ${isCurrentStop ? '#4f46e5' : getColor(stop.category)};
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: ${isCurrentStop ? '16px' : '14px'};
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          border: 3px solid ${isCurrentStop ? '#fff' : 'rgba(255,255,255,0.8)'};
+          transition: all 0.3s ease;
+        ">
+          ${index + 1}
+        </div>
+      `;
 
-      // Agregar marcadores
-      route.stops.forEach((stop, index) => {
-        const el = document.createElement('div');
-        const isCurrentStop = index === currentStopIndex;
-        
-        el.innerHTML = `
-          <div style="
-            width: ${isCurrentStop ? '40px' : '32px'};
-            height: ${isCurrentStop ? '40px' : '32px'};
-            background: ${isCurrentStop ? '#4f46e5' : getColor(stop.category)};
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: ${isCurrentStop ? '16px' : '14px'};
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            border: 3px solid ${isCurrentStop ? '#fff' : 'rgba(255,255,255,0.8)'};
-            transition: all 0.3s ease;
-          ">
-            ${index + 1}
-          </div>
-        `;
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
+        <div style="padding: 8px; max-width: 200px;">
+          <strong>${stop.name}</strong>
+          ${stop.category ? `<p style="margin: 4px 0 0; font-size: 12px; color: #666;">${stop.category}</p>` : ''}
+          ${stop.duration ? `<p style="margin: 4px 0 0; font-size: 11px; color: #888;">⏱️ ${stop.duration} min</p>` : ''}
+        </div>
+      `);
 
-        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
-          <div style="padding: 8px; max-width: 200px;">
-            <strong>${stop.name}</strong>
-            ${stop.category ? `<p style="margin: 4px 0 0; font-size: 12px; color: #666;">${stop.category}</p>` : ''}
-            ${stop.duration ? `<p style="margin: 4px 0 0; font-size: 11px; color: #888;">⏱️ ${stop.duration} min</p>` : ''}
-          </div>
-        `);
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat([stop.longitude, stop.latitude])
+        .setPopup(popup)
+        .addTo(map.current!);
 
-        const marker = new mapboxgl.Marker({ element: el })
-          .setLngLat([stop.longitude, stop.latitude])
-          .setPopup(popup)
-          .addTo(map.current!);
+      markersRef.current.push(marker);
+    });
 
-        markersRef.current.push(marker);
+    // Ajustar vista para mostrar todas las paradas
+    if (route.stops.length > 0 && currentStopIndex === 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      route.stops.forEach(stop => {
+        bounds.extend([stop.longitude, stop.latitude]);
       });
 
-      // Dibujar línea de ruta
-      const geometry = routeGeometry || directions?.geometry;
-      if (geometry) {
-        // Remover fuente anterior si existe
-        try {
-          if (map.current?.getSource('route')) {
-            if (map.current.getLayer('route-line')) map.current.removeLayer('route-line');
-            if (map.current.getLayer('route-line-outline')) map.current.removeLayer('route-line-outline');
-            map.current.removeSource('route');
-          }
-        } catch (e) {
-          // Ignorar errores de limpieza
-        }
+      map.current?.fitBounds(bounds, {
+        padding: { top: 60, bottom: 60, left: 60, right: 60 },
+        maxZoom: 15,
+        duration: 1000
+      });
+    }
+  }, [mapLoaded, route, currentStopIndex, getColor]);
 
-        map.current?.addSource('route', {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: geometry
-          }
-        });
+  // Dibujar la línea de ruta cuando tengamos la geometría
+  useEffect(() => {
+    if (!map.current || !mapLoaded || !routeGeometry) return;
 
-        // Línea de contorno
-        map.current?.addLayer({
-          id: 'route-line-outline',
-          type: 'line',
-          source: 'route',
-          layout: { 'line-join': 'round', 'line-cap': 'round' },
-          paint: { 'line-color': '#1e3a5f', 'line-width': 8, 'line-opacity': 0.4 }
-        });
+    console.log('🗺️ [RouteNavigationModal] Drawing route line');
 
-        // Línea principal
-        map.current?.addLayer({
-          id: 'route-line',
-          type: 'line',
-          source: 'route',
-          layout: { 'line-join': 'round', 'line-cap': 'round' },
-          paint: { 'line-color': '#4f46e5', 'line-width': 5 }
-        });
+    // Remover fuente anterior si existe
+    try {
+      if (map.current.getSource('route')) {
+        if (map.current.getLayer('route-line')) map.current.removeLayer('route-line');
+        if (map.current.getLayer('route-line-outline')) map.current.removeLayer('route-line-outline');
+        map.current.removeSource('route');
       }
+    } catch (e) {
+      // Ignorar errores de limpieza
+    }
 
-      // Ajustar vista para mostrar toda la ruta
-      if (route.stops.length > 0) {
-        const bounds = new mapboxgl.LngLatBounds();
-        route.stops.forEach(stop => {
-          bounds.extend([stop.longitude, stop.latitude]);
-        });
-
-        map.current?.fitBounds(bounds, {
-          padding: { top: 60, bottom: 60, left: 60, right: 60 },
-          maxZoom: 15,
-          duration: 1000
-        });
+    map.current.addSource('route', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        properties: {},
+        geometry: routeGeometry
       }
-    };
+    });
 
-    drawRoute();
-  }, [mapLoaded, route, currentStopIndex, fetchDirections, routeGeometry, getColor]);
+    // Línea de contorno
+    map.current.addLayer({
+      id: 'route-line-outline',
+      type: 'line',
+      source: 'route',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': '#1e3a5f', 'line-width': 8, 'line-opacity': 0.4 }
+    });
+
+    // Línea principal
+    map.current.addLayer({
+      id: 'route-line',
+      type: 'line',
+      source: 'route',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': '#4f46e5', 'line-width': 5 }
+    });
+  }, [mapLoaded, routeGeometry]);
 
   // Navegar a la siguiente parada
   const goToNextStop = () => {
