@@ -26,7 +26,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['wifi', 'breakfast', 'parking'],
     experienceTags: ['boutique', 'wifi'],
     coordinates: [-33.4450, -70.6650],
-    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
+    image: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=1200&q=85&fit=crop',
     description: 'Hotel boutique con diseño contemporáneo en el corazón de Providencia',
   },
   {
@@ -45,7 +45,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['wifi', 'kitchen'],
     experienceTags: ['economico', 'wifi'],
     coordinates: [-33.4520, -70.6710],
-    image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800',
+    image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=85&fit=crop',
     description: 'Hostal acogedor con vistas al cerro San Cristóbal',
   },
   {
@@ -64,7 +64,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['pet-friendly', 'piscina', 'bbq'],
     experienceTags: ['familiar', 'pet-friendly', 'piscina'],
     coordinates: [-33.4600, -70.6800],
-    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800',
+    image: 'https://images.unsplash.com/photo-1587381420270-3e1a5b9e6904?w=1200&q=85&fit=crop',
     description: 'Cabañas espaciosas perfectas para familias, con jardín y piscina',
   },
 
@@ -85,7 +85,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['wifi', 'outdoor-seating', 'artisan-coffee'],
     experienceTags: ['cafeterias', 'tradicional'],
     coordinates: [-33.4470, -70.6670],
-    image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800',
+    image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1200&q=85&fit=crop',
     description: 'Café de especialidad con vinilos vintage y ambiente bohemio',
   },
   {
@@ -104,7 +104,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['vegan', 'gluten-free', 'organic'],
     experienceTags: ['vegano'],
     coordinates: [-33.4430, -70.6640],
-    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800',
+    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=85&fit=crop',
     description: 'Cocina plant-based con ingredientes orgánicos locales',
   },
   {
@@ -123,7 +123,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['takeaway', 'fast-service'],
     experienceTags: ['street-food', 'tradicional'],
     coordinates: [-33.4500, -70.6680],
-    image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800',
+    image: 'https://images.unsplash.com/photo-1619221882410-ff9d0313f5b9?w=1200&q=85&fit=crop',
     description: 'Los mejores completos italianos de Santiago desde 1985',
   },
   {
@@ -142,7 +142,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['seafood', 'patio', 'reservations'],
     experienceTags: ['mariscos', 'internacional'],
     coordinates: [-33.4400, -70.6600],
-    image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800',
+    image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1200&q=85&fit=crop',
     description: 'Cebiche peruano auténtico con productos del día',
   },
 
@@ -163,7 +163,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['guided', 'group', 'español'],
     experienceTags: ['tours-guiados', 'historia'],
     coordinates: [-33.4480, -70.6690],
-    image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800',
+    image: 'https://images.unsplash.com/photo-1555400082-89f07be8007c?w=1200&q=85&fit=crop',
     description: 'Recorrido histórico por el bohemio Barrio Italia con guía local',
   },
   {
@@ -182,7 +182,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['hands-on', 'artisan', 'booking-required'],
     experienceTags: ['historia', 'museos'],
     coordinates: [-33.4550, -70.6720],
-    image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800',
+    image: 'https://images.unsplash.com/photo-1493106819501-66d381c466f1?w=1200&q=85&fit=crop',
     description: 'Aprende cerámica tradicional chilena con artesanos locales',
   },
   {

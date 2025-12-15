@@ -4,7 +4,8 @@ import { X, MapPin, Star, Phone, Clock, Share2, Heart, Navigation, DollarSign, W
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { useFavorites } from "@/hooks/use-favorites"
 import dynamic from "next/dynamic"
 
 // Import BusinessMap dynamically to avoid SSR issues with Mapbox
@@ -60,20 +61,31 @@ const featureIcons: Record<string, React.ReactNode> = {
 }
 
 export function BusinessDetailModal({ business, isOpen, onClose }: BusinessDetailModalProps) {
-  const [isFavorited, setIsFavorited] = useState(false)
-
+  const { isFavorite, toggleFavorite } = useFavorites()
+  const { toast } = useToast()
+  
   if (!isOpen || !business) return null
+  
+  const isFavorited = isFavorite(business.id)
+
+  const handleToggleFavorite = () => {
+    toggleFavorite(business.id)
+    toast({
+      title: isFavorited ? "Eliminado de favoritos" : "Agregado a favoritos",
+      description: isFavorited 
+        ? `${business.name} ha sido eliminado de tus favoritos.`
+        : `${business.name} ha sido agregado a tus favoritos.`,
+    })
+  }
 
   const handleOpenInMap = () => {
     if (business.lat && business.lng) {
-      // Abrir en el mapa interactivo de la app
       window.open(`/map-interactive?lat=${business.lat}&lng=${business.lng}&zoom=16`, '_blank')
     }
   }
 
   const handleGetDirections = () => {
     if (business.lat && business.lng) {
-      // Opción 1: Abrir Google Maps con direcciones desde ubicación actual
       window.open(`https://www.google.com/maps/dir/?api=1&destination=${business.lat},${business.lng}`, '_blank')
     }
   }
@@ -90,9 +102,11 @@ export function BusinessDetailModal({ business, isOpen, onClose }: BusinessDetai
         console.log('Error sharing:', err)
       }
     } else {
-      // Fallback: copiar al portapapeles
       navigator.clipboard.writeText(window.location.href)
-      alert('Link copiado al portapapeles')
+      toast({
+        title: "Link copiado",
+        description: "El enlace ha sido copiado al portapapeles.",
+      })
     }
   }
 
@@ -131,18 +145,20 @@ export function BusinessDetailModal({ business, isOpen, onClose }: BusinessDetai
               {/* Favorite & Share buttons */}
               <div className="absolute top-4 left-4 flex gap-2">
                 <button
-                  onClick={() => setIsFavorited(!isFavorited)}
-                  className="p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-colors"
+                  onClick={handleToggleFavorite}
+                  className="p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all hover:scale-110"
+                  title={isFavorited ? "Quitar de favoritos" : "Agregar a favoritos"}
                 >
                   <Heart
-                    className={`w-5 h-5 transition-colors ${
-                      isFavorited ? "fill-red-500 text-red-500" : "text-gray-700"
+                    className={`w-5 h-5 transition-all ${
+                      isFavorited ? "fill-red-500 text-red-500 scale-110" : "text-gray-700 hover:text-red-500"
                     }`}
                   />
                 </button>
                 <button
                   onClick={handleShare}
                   className="p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-colors"
+                  title="Compartir"
                 >
                   <Share2 className="w-5 h-5 text-gray-700" />
                 </button>

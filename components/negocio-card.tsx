@@ -1,8 +1,9 @@
 "use client"
 
 import { Heart, MapPin, Star, Plus, Map, CheckCircle2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
+import { useFavorites } from "@/hooks/use-favorites"
 
 interface NegocioCardProps {
   id: string
@@ -48,10 +49,12 @@ export function NegocioCard({
   isVerified,
   onClick,
 }: NegocioCardProps) {
-  const [isFavorited, setIsFavorited] = useState(false)
   const [isAddedToRoute, setIsAddedToRoute] = useState(false)
   const { toast } = useToast()
+  const { isFavorite, toggleFavorite } = useFavorites()
   const colors = categoryColors[category] || { badge: "bg-gray-500", bg: "/placeholder.svg" }
+  
+  const isFavorited = isFavorite(id)
 
   const handleAddToRoute = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -60,13 +63,22 @@ export function NegocioCard({
       title: "Agregado a tu ruta",
       description: `${name} ha sido agregado a tu ruta.`,
     })
-    // TODO: Implementar lógica real de agregar a ruta
   }
 
   const handleViewOnMap = (e: React.MouseEvent) => {
     e.stopPropagation()
-    // TODO: Redirigir al mapa con este negocio centrado
     window.location.href = `/map-interactive?business=${id}`
+  }
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    toggleFavorite(id)
+    toast({
+      title: isFavorited ? "Eliminado de favoritos" : "Agregado a favoritos",
+      description: isFavorited 
+        ? `${name} ha sido eliminado de tus favoritos.`
+        : `${name} ha sido agregado a tus favoritos.`,
+    })
   }
 
   return (
@@ -125,15 +137,13 @@ export function NegocioCard({
         <div className="absolute top-3 right-3 flex flex-col gap-2">
           {/* Heart Icon */}
           <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setIsFavorited(!isFavorited)
-            }}
-            className="rounded-full bg-white/95 backdrop-blur-sm p-2 transition-all hover:bg-white shadow-md"
+            onClick={handleToggleFavorite}
+            className="rounded-full bg-white/95 backdrop-blur-sm p-2 transition-all hover:bg-white hover:scale-110 shadow-md"
+            title={isFavorited ? "Quitar de favoritos" : "Agregar a favoritos"}
           >
             <Heart
               size={16}
-              className={`transition-colors ${isFavorited ? "fill-red-500 text-red-500" : "text-gray-600"}`}
+              className={`transition-all ${isFavorited ? "fill-red-500 text-red-500 scale-110" : "text-gray-600 hover:text-red-500"}`}
             />
           </button>
 

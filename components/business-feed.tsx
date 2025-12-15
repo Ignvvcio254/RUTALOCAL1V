@@ -5,12 +5,15 @@ import { useFilters } from '@/contexts/filter-context'
 import { useAllBusinesses } from '@/hooks/use-businesses'
 import { filterAndSortBusinesses } from '@/lib/filters/filter-utils'
 import { NegocioCard } from './negocio-card'
+import { BusinessDetailModal, type BusinessDetail } from './business-detail-modal'
 import { Sparkles, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
 import { Button } from './ui/button'
 
 export function BusinessFeed() {
   const { filters } = useFilters()
   const [visibleCount, setVisibleCount] = useState(9)
+  const [selectedBusiness, setSelectedBusiness] = useState<BusinessDetail | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Obtener negocios de la API real
   const { businesses: apiBusinesses, loading, error, refetch } = useAllBusinesses()
@@ -28,6 +31,30 @@ export function BusinessFeed() {
 
   const loadMore = () => {
     setVisibleCount((prev) => Math.min(prev + 9, filteredBusinesses.length))
+  }
+
+  const handleBusinessClick = (business: any) => {
+    // Convertir el negocio al formato esperado por el modal
+    const businessDetail: BusinessDetail = {
+      id: business.id,
+      name: business.name,
+      category: business.subcategory || business.category,
+      rating: business.rating,
+      reviews: business.reviews,
+      distance: `${business.distance >= 1000 ? `${(business.distance / 1000).toFixed(1)}km` : `${business.distance}m`}`,
+      description: business.description,
+      priceRange: business.priceRange,
+      isOpen: business.isOpen,
+      image: business.image,
+      phone: '+56 9 1234 5678',
+      address: 'Santiago Centro',
+      lat: business.coordinates?.[0],
+      lng: business.coordinates?.[1],
+      features: business.attributes,
+      aboutText: business.description,
+    }
+    setSelectedBusiness(businessDetail)
+    setIsModalOpen(true)
   }
 
   // Estado de carga
@@ -123,9 +150,17 @@ export function BusinessFeed() {
                   image={business.image}
                   hasOffer={business.hasOffer}
                   isVerified={business.isVerified}
+                  onClick={() => handleBusinessClick(business)}
                 />
               ))}
             </div>
+
+            {/* Business Detail Modal */}
+            <BusinessDetailModal
+              business={selectedBusiness}
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+            />
 
             {/* Botón Cargar Más */}
             {hasMore && (
