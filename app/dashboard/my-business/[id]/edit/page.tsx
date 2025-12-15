@@ -93,11 +93,29 @@ export default function EditBusinessPage() {
         console.log("✅ Imagen subida:", coverImageUrl);
       }
 
-      // Update business
-      const updateData = {
-        ...business,
+      // Prepare update data - only send fields that can be updated
+      // Convert category object to slug if it exists
+      const updateData: any = {
+        name: business.name,
+        description: business.description,
+        short_description: business.short_description,
+        address: business.address,
+        phone: business.phone,
+        email: business.email,
+        website: business.website,
+        instagram: business.instagram,
         cover_image: coverImageUrl,
+        images: business.images,
+        price_range: business.price_range,
+        is_open_24h: business.is_open_24h,
+        hours: business.hours,
       };
+
+      // Handle category - extract slug if it's an object
+      if ((business as any).category) {
+        const category = (business as any).category;
+        updateData.category = typeof category === 'string' ? category : category.slug;
+      }
 
       await updateBusiness(business.id, updateData);
 
