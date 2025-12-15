@@ -76,9 +76,9 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
         stops: (route.stops || []).map((stop: any, index: number) => ({
           id: stop.id || `stop-${index}`,
           name: stop.business?.name || stop.name || `Parada ${index + 1}`,
-          category: stop.business?.category || '',
-          latitude: stop.business?.latitude || stop.latitude || 0,
-          longitude: stop.business?.longitude || stop.longitude || 0,
+          category: stop.business?.category?.name || stop.business?.category || '',
+          latitude: stop.business?.location?.lat || stop.business?.latitude || stop.latitude || 0,
+          longitude: stop.business?.location?.lng || stop.business?.longitude || stop.longitude || 0,
           duration: stop.duration || 30,
           order: stop.order || index + 1,
           cover_image: stop.business?.cover_image
