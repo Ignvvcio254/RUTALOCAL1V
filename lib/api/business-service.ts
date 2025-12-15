@@ -8,6 +8,7 @@
 
 import { env } from '../env'
 import { showError } from '../errors/error-handler'
+import { mapCategorySlugToMain } from '../filters/category-mapper'
 
 const API_URL = env.apiEndpoint
 
@@ -242,16 +243,20 @@ export async function getNearbyBusinesses(
 
 /**
  * Convierte PublicBusiness a formato legacy (para compatibilidad con componentes antiguos)
+ * Aplica mapeo inteligente de categorías backend → frontend
  */
 export function convertToLegacyFormat(business: PublicBusiness): any {
   const rating = typeof business.rating === 'string'
     ? parseFloat(business.rating)
     : business.rating
 
+  // Map backend category slug to frontend main category
+  const mainCategory = mapCategorySlugToMain(business.category?.slug)
+
   return {
     id: business.id,
     name: business.name,
-    category: business.category?.slug || 'general',
+    category: mainCategory, // Now correctly mapped to 'hospedaje' | 'gastronomia' | 'turismo'
     subcategory: business.subcategory || business.category?.name || 'General',
     rating: rating || 0,
     reviews: business.review_count || 0,
