@@ -195,7 +195,7 @@ export function RouteBuilderContainer() {
       if (savedRoute) {
         toast({
           title: "¡Ruta guardada!",
-          description: `"${routeTitle}" se ha guardado en tu perfil`,
+          description: `"${routeTitle}" se ha guardado en tu perfil. Ve a Perfil > Actividad para verla.`,
         })
         
         // Limpiar formulario

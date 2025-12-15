@@ -61,6 +61,7 @@ export function ActivitySection({ userId }: ActivitySectionProps) {
         totalVisits={stats.totalVisits}
         totalFavorites={stats.totalFavorites}
         totalReviews={stats.totalReviews}
+        totalRoutes={stats.totalRoutes || 0}
         memberSince={new Date(stats.memberSince).toLocaleDateString('es-ES', {
           year: 'numeric',
           month: 'long',

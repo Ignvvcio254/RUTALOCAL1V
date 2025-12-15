@@ -19,11 +19,21 @@ export interface ValidationRule {
 
 export interface ActivityData {
   id: string;
-  type: 'visit' | 'favorite' | 'review' | 'share';
-  businessId: string;
-  businessName: string;
+  type: 'visit' | 'favorite' | 'review' | 'share' | 'route';
+  businessId?: string;
+  businessName?: string;
+  routeId?: string;
+  routeName?: string;
   timestamp: number;
   metadata?: Record<string, any>;
+}
+
+export interface StatsData {
+  totalVisits: number;
+  totalFavorites: number;
+  totalReviews: number;
+  totalRoutes?: number;
+  memberSince: string;
 }
 
 export interface StatsData {

@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TrendingUp, Heart, Star, Calendar } from 'lucide-react';
+import { TrendingUp, Heart, Star, Calendar, Route } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface StatsGridProps {
   totalVisits: number;
   totalFavorites: number;
   totalReviews: number;
+  totalRoutes?: number;
   memberSince: string;
 }
 
@@ -59,9 +60,9 @@ function StatCard({ label, value, icon, color, delay }: StatCardProps) {
   );
 }
 
-export function StatsGrid({ totalVisits, totalFavorites, totalReviews, memberSince }: StatsGridProps) {
+export function StatsGrid({ totalVisits, totalFavorites, totalReviews, totalRoutes = 0, memberSince }: StatsGridProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
       <StatCard
         label="Visitas"
         value={totalVisits}
@@ -83,11 +84,18 @@ export function StatsGrid({ totalVisits, totalFavorites, totalReviews, memberSin
         color="bg-yellow-100"
         delay={0.2}
       />
+      <StatCard
+        label="Rutas"
+        value={totalRoutes}
+        icon={<Route className="w-6 h-6 text-indigo-600" />}
+        color="bg-indigo-100"
+        delay={0.25}
+      />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.4 }}
-        className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-6 border border-primary/20 shadow-sm"
+        className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-6 border border-primary/20 shadow-sm col-span-2 md:col-span-1"
       >
         <div className="flex items-center justify-between mb-4">
           <div className="p-3 rounded-xl bg-primary/20">
