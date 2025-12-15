@@ -1,6 +1,6 @@
 /**
  * Interactions Service
- * Handles user interactions: favorites, reviews, views
+ * Handles user interactions: favorites, reviews, visits
  */
 
 import { env } from '../env'
@@ -68,14 +68,17 @@ export interface CreateReviewData {
 }
 
 /**
- * Get reviews for a business
- * Backend URL: /api/reviews/businesses/{id}/reviews/
+ * Get reviews for a business (PUBLIC - no auth required)
  */
 export async function getBusinessReviews(businessId: string, page: number = 1): Promise<ReviewsResponse> {
   try {
+    // NO auth headers for public GET
     const response = await fetch(
       `${API_URL}/reviews/businesses/${businessId}/reviews/?page=${page}`,
-      { headers: getAuthHeaders() }
+      { 
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
 
     if (!response.ok) {
@@ -95,8 +98,7 @@ export async function getBusinessReviews(businessId: string, page: number = 1): 
 }
 
 /**
- * Create a new review
- * Backend URL: /api/reviews/businesses/{id}/reviews/create/
+ * Create a new review (requires auth)
  */
 export async function createReview(businessId: string, reviewData: CreateReviewData) {
   const response = await fetch(`${API_URL}/reviews/businesses/${businessId}/reviews/create/`, {
@@ -123,16 +125,20 @@ export async function markReviewHelpful(reviewId: string) {
   return response.json()
 }
 
-// ==================== VIEWS ====================
+// ==================== VISITS (not views) ====================
 
+/**
+ * Track a business visit
+ * Backend endpoint is /visit/ not /view/
+ */
 export async function trackBusinessView(businessId: string): Promise<void> {
   try {
-    await fetch(`${API_URL}/businesses/${businessId}/view/`, {
+    await fetch(`${API_URL}/businesses/${businessId}/visit/`, {
       method: 'POST',
       headers: getAuthHeaders(),
     })
   } catch {
-    // Silent fail
+    // Silent fail - visit tracking is not critical
   }
 }
 
