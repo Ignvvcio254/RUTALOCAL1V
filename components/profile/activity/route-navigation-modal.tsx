@@ -2,13 +2,16 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { env } from '@/lib/env';
 import { 
   MapPin, Navigation, Clock, Route as RouteIcon, 
   ChevronRight, X, ExternalLink, Loader2,
   RotateCcw
 } from 'lucide-react';
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoibmFjaG8yNTQiLCJhIjoiY21pdGxyZjhnMHRlYjNnb243bnA1OG81ayJ9.BPTKLir4w184eLNzsao9XQ';
+const MAPBOX_TOKEN = env.maps.mapboxToken;
 
 interface RouteStop {
   id: string;
@@ -42,12 +45,11 @@ interface RouteNavigationModalProps {
  */
 export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigationModalProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
   
-  const [mapboxgl, setMapboxgl] = useState<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [isLoadingMapbox, setIsLoadingMapbox] = useState(true);
+  const [isLoadingMap, setIsLoadingMap] = useState(true);
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
   const [routeGeometry, setRouteGeometry] = useState<any>(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
@@ -66,38 +68,10 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
     "hotel": "#10b981",
   };
 
-  const getColor = (category?: string) => {
+  const getColor = useCallback((category?: string) => {
     if (!category) return "#6366f1";
     return categoryColors[category.toLowerCase()] || "#6366f1";
-  };
-
-  // Cargar mapbox-gl dinámicamente
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    let isMounted = true;
-
-    const loadMapbox = async () => {
-      try {
-        const mapboxModule = await import('mapbox-gl');
-        await import('mapbox-gl/dist/mapbox-gl.css');
-        
-        if (isMounted) {
-          setMapboxgl(mapboxModule.default);
-          setIsLoadingMapbox(false);
-        }
-      } catch (error) {
-        console.error('Error loading mapbox-gl:', error);
-        setIsLoadingMapbox(false);
-      }
-    };
-
-    loadMapbox();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isOpen]);
+  }, []);
 
   // Obtener ruta de Mapbox Directions API
   const fetchDirections = useCallback(async (stops: RouteStop[]) => {
@@ -132,33 +106,46 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
     return null;
   }, []);
 
-  // Inicializar mapa cuando mapboxgl esté disponible
+  // Inicializar mapa cuando se abre el modal
   useEffect(() => {
-    if (!isOpen || !mapboxgl || !mapContainer.current || !route || route.stops.length === 0) return;
+    if (!isOpen || !mapContainer.current || !route || route.stops.length === 0) return;
 
-    // Limpiar mapa anterior
+    // Limpiar mapa anterior si existe
     if (map.current) {
       map.current.remove();
       map.current = null;
     }
 
+    setIsLoadingMap(true);
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
     const firstStop = route.stops[0];
     
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [firstStop.longitude, firstStop.latitude],
-      zoom: 14,
-      attributionControl: false,
-    });
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [firstStop.longitude, firstStop.latitude],
+        zoom: 14,
+        attributionControl: false,
+      });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    map.current.on('load', () => {
-      setMapLoaded(true);
-    });
+      map.current.on('load', () => {
+        console.log('🗺️ [RouteNavigationModal] Map loaded');
+        setMapLoaded(true);
+        setIsLoadingMap(false);
+      });
+
+      map.current.on('error', (e) => {
+        console.error('🗺️ [RouteNavigationModal] Map error:', e);
+        setIsLoadingMap(false);
+      });
+    } catch (error) {
+      console.error('🗺️ [RouteNavigationModal] Error initializing map:', error);
+      setIsLoadingMap(false);
+    }
 
     return () => {
       markersRef.current.forEach(m => m.remove());
@@ -169,11 +156,11 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
       }
       setMapLoaded(false);
     };
-  }, [isOpen, mapboxgl, route]);
+  }, [isOpen, route]);
 
   // Dibujar ruta y marcadores cuando el mapa esté listo
   useEffect(() => {
-    if (!map.current || !mapLoaded || !mapboxgl || !route || route.stops.length === 0) return;
+    if (!map.current || !mapLoaded || !route || route.stops.length === 0) return;
 
     const drawRoute = async () => {
       // Limpiar marcadores anteriores
@@ -216,7 +203,7 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
           </div>
         `);
 
-        const marker = new mapboxgl.Marker(el)
+        const marker = new mapboxgl.Marker({ element: el })
           .setLngLat([stop.longitude, stop.latitude])
           .setPopup(popup)
           .addTo(map.current!);
@@ -282,7 +269,7 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
     };
 
     drawRoute();
-  }, [mapLoaded, mapboxgl, route, currentStopIndex, fetchDirections, routeGeometry]);
+  }, [mapLoaded, route, currentStopIndex, fetchDirections, routeGeometry, getColor]);
 
   // Navegar a la siguiente parada
   const goToNextStop = () => {
@@ -344,7 +331,7 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
   const resetNavigation = () => {
     setCurrentStopIndex(0);
     
-    if (route && route.stops.length > 0 && mapboxgl) {
+    if (route && route.stops.length > 0) {
       const bounds = new mapboxgl.LngLatBounds();
       route.stops.forEach(stop => {
         bounds.extend([stop.longitude, stop.latitude]);
@@ -393,79 +380,79 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
         <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
           {/* Mapa */}
           <div className="flex-1 relative min-h-[300px]">
-            {isLoadingMapbox ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+            {isLoadingMap && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-20">
                 <div className="flex flex-col items-center gap-2">
                   <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
                   <p className="text-sm text-gray-500">Cargando mapa...</p>
                 </div>
               </div>
-            ) : (
-              <>
-                <div ref={mapContainer} className="absolute inset-0" />
-                
-                {loadingRoute && (
-                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
-                      <span className="text-sm text-gray-600">Calculando ruta...</span>
-                    </div>
-                  </div>
-                )}
+            )}
+            
+            <div ref={mapContainer} className="absolute inset-0" />
+            
+            {loadingRoute && (
+              <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                  <span className="text-sm text-gray-600">Calculando ruta...</span>
+                </div>
+              </div>
+            )}
 
-                {/* Controles de navegación en el mapa */}
-                <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-72 z-10">
-                  <div className="bg-white rounded-xl shadow-lg p-4">
-                    {currentStop && (
-                      <div className="mb-3">
-                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                          <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
-                            Parada {currentStopIndex + 1} de {route?.stops.length}
-                          </span>
-                        </div>
-                        <h4 className="font-semibold text-gray-900">{currentStop.name}</h4>
-                        {currentStop.category && (
-                          <p className="text-sm text-gray-500">{currentStop.category}</p>
-                        )}
+            {/* Controles de navegación en el mapa */}
+            {!isLoadingMap && (
+              <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-72 z-10">
+                <div className="bg-white rounded-xl shadow-lg p-4">
+                  {currentStop && (
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                        <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                          Parada {currentStopIndex + 1} de {route?.stops.length}
+                        </span>
                       </div>
-                    )}
-
-                    {nextStop && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded-lg">
-                        <ChevronRight className="w-4 h-4 text-indigo-500" />
-                        <span>Siguiente: <strong>{nextStop.name}</strong></span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={goToPrevStop}
-                        disabled={currentStopIndex === 0}
-                        className="flex-1"
-                      >
-                        ← Anterior
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={resetNavigation}
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={goToNextStop}
-                        disabled={!nextStop}
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-                      >
-                        Siguiente →
-                      </Button>
+                      <h4 className="font-semibold text-gray-900">{currentStop.name}</h4>
+                      {currentStop.category && (
+                        <p className="text-sm text-gray-500">{currentStop.category}</p>
+                      )}
                     </div>
+                  )}
+
+                  {nextStop && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded-lg">
+                      <ChevronRight className="w-4 h-4 text-indigo-500" />
+                      <span>Siguiente: <strong>{nextStop.name}</strong></span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={goToPrevStop}
+                      disabled={currentStopIndex === 0}
+                      className="flex-1"
+                    >
+                      ← Anterior
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetNavigation}
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={goToNextStop}
+                      disabled={!nextStop}
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      Siguiente →
+                    </Button>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
 

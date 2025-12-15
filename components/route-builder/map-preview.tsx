@@ -1,28 +1,34 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { MapPin, Maximize2, Minimize2, Loader2 } from "lucide-react"
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
+import { env } from '@/lib/env'
 import type { RouteItem } from "./route-builder-container"
 
-// Token de Mapbox
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoibmFjaG8yNTQiLCJhIjoiY21pdGxyZjhnMHRlYjNnb243bnA1OG81ayJ9.BPTKLir4w184eLNzsao9XQ'
+// Token de Mapbox desde env
+const MAPBOX_TOKEN = env.maps.mapboxToken
 
 interface MapPreviewProps {
   items: RouteItem[]
   title: string
 }
 
+/**
+ * MapPreview - Componente para previsualizar rutas en un mapa
+ * Muestra marcadores numerados y líneas de conexión entre paradas
+ */
 export function MapPreview({ items, title }: MapPreviewProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
-  const map = useRef<any>(null)
-  const markersRef = useRef<any[]>([])
+  const map = useRef<mapboxgl.Map | null>(null)
+  const markersRef = useRef<mapboxgl.Marker[]>([])
   const [isExpanded, setIsExpanded] = useState(false)
   const [mapLoaded, setMapLoaded] = useState(false)
-  const [mapboxgl, setMapboxgl] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   // Centro por defecto: Santiago, Chile
-  const defaultCenter: [number, number] = [-70.6506, -33.4372]
+  const defaultCenter: [number, number] = [env.maps.defaultCenter.lng, env.maps.defaultCenter.lat]
 
   const categoryColors: Record<string, string> = {
     "café": "#f97316",
@@ -37,38 +43,12 @@ export function MapPreview({ items, title }: MapPreviewProps) {
     "hotel": "#10b981",
   }
 
-  const getColor = (category: string) => {
+  const getColor = useCallback((category: string) => {
     return categoryColors[category.toLowerCase()] || "#6366f1"
-  }
-
-  // Cargar mapbox-gl dinámicamente
-  useEffect(() => {
-    let isMounted = true
-
-    const loadMapbox = async () => {
-      try {
-        const mapboxModule = await import('mapbox-gl')
-        await import('mapbox-gl/dist/mapbox-gl.css')
-        
-        if (isMounted) {
-          setMapboxgl(mapboxModule.default)
-          setIsLoading(false)
-        }
-      } catch (error) {
-        console.error('Error loading mapbox-gl:', error)
-        setIsLoading(false)
-      }
-    }
-
-    loadMapbox()
-
-    return () => {
-      isMounted = false
-    }
   }, [])
 
   // Calcular centro basado en items
-  const calculateCenter = (): [number, number] => {
+  const calculateCenter = useCallback((): [number, number] => {
     if (items.length === 0) {
       return defaultCenter
     }
@@ -85,33 +65,42 @@ export function MapPreview({ items, title }: MapPreviewProps) {
     const avgLng = validItems.reduce((sum, item) => sum + item.lng, 0) / validItems.length
     const avgLat = validItems.reduce((sum, item) => sum + item.lat, 0) / validItems.length
     return [avgLng, avgLat]
-  }
+  }, [items])
 
-  // Inicializar mapa cuando mapboxgl esté disponible
+  // Inicializar mapa
   useEffect(() => {
-    if (!mapboxgl || !mapContainer.current || map.current) return
+    if (!mapContainer.current || map.current) return
 
+    // Configurar token
     mapboxgl.accessToken = MAPBOX_TOKEN
 
     const center = calculateCenter()
     
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: center,
-      zoom: items.length > 0 ? 13 : 12,
-      attributionControl: false,
-    })
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/streets-v12",
+        center: center,
+        zoom: items.length > 0 ? 13 : 12,
+        attributionControl: false,
+      })
 
-    map.current.addControl(new mapboxgl.NavigationControl(), "top-right")
+      map.current.addControl(new mapboxgl.NavigationControl(), "top-right")
 
-    map.current.on("load", () => {
-      setMapLoaded(true)
-    })
+      map.current.on("load", () => {
+        console.log('🗺️ [MapPreview] Map loaded successfully')
+        setMapLoaded(true)
+        setIsLoading(false)
+      })
 
-    map.current.on("error", (e: any) => {
-      console.error("Mapbox error:", e)
-    })
+      map.current.on("error", (e) => {
+        console.error("🗺️ [MapPreview] Mapbox error:", e)
+        setIsLoading(false)
+      })
+    } catch (error) {
+      console.error('🗺️ [MapPreview] Error initializing map:', error)
+      setIsLoading(false)
+    }
 
     return () => {
       markersRef.current.forEach(marker => marker.remove())
@@ -122,11 +111,11 @@ export function MapPreview({ items, title }: MapPreviewProps) {
       }
       setMapLoaded(false)
     }
-  }, [mapboxgl])
+  }, [])
 
   // Actualizar marcadores y ruta cuando cambian los items
   useEffect(() => {
-    if (!map.current || !mapLoaded || !mapboxgl) return
+    if (!map.current || !mapLoaded) return
 
     // Limpiar marcadores anteriores
     markersRef.current.forEach(marker => marker.remove())
@@ -193,7 +182,7 @@ export function MapPreview({ items, title }: MapPreviewProps) {
         </div>
       `)
 
-      const marker = new mapboxgl.Marker(el)
+      const marker = new mapboxgl.Marker({ element: el })
         .setLngLat([item.lng, item.lat])
         .setPopup(popup)
         .addTo(map.current!)
@@ -246,7 +235,7 @@ export function MapPreview({ items, title }: MapPreviewProps) {
         duration: 1000
       })
     }
-  }, [items, mapLoaded, mapboxgl])
+  }, [items, mapLoaded, getColor])
 
   return (
     <div className={`h-full flex flex-col bg-gray-100 relative ${isExpanded ? 'fixed inset-0 z-50' : ''}`}>
@@ -268,27 +257,25 @@ export function MapPreview({ items, title }: MapPreviewProps) {
 
       {/* Map Container */}
       <div className="flex-1 relative min-h-[300px]">
-        {isLoading ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-20">
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
               <p className="text-sm text-gray-500">Cargando mapa...</p>
             </div>
           </div>
-        ) : (
-          <>
-            <div ref={mapContainer} className="absolute inset-0" />
+        )}
+        
+        <div ref={mapContainer} className="absolute inset-0" />
 
-            {/* Placeholder when empty */}
-            {items.length === 0 && !isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80 z-10">
-                <div className="text-center">
-                  <MapPin size={48} className="text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">Agrega lugares para ver la ruta</p>
-                </div>
-              </div>
-            )}
-          </>
+        {/* Placeholder when empty */}
+        {items.length === 0 && !isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80 z-10">
+            <div className="text-center">
+              <MapPin size={48} className="text-gray-400 mx-auto mb-2" />
+              <p className="text-gray-500 text-sm">Agrega lugares para ver la ruta</p>
+            </div>
+          </div>
         )}
       </div>
 
