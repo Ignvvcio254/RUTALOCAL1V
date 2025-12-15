@@ -1,11 +1,15 @@
 "use client"
 
-import { X, MapPin, Star, Phone, Clock, Share2, Heart, Navigation, DollarSign, Wifi, PawPrint, Utensils } from "lucide-react"
+import { useState, useEffect } from "react"
+import { X, MapPin, Star, Phone, Clock, Share2, Heart, Navigation, DollarSign, Wifi, PawPrint, Utensils, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { useFavorites } from "@/hooks/use-favorites"
+import { useGeolocation } from "@/hooks/use-geolocation"
+import { trackBusinessView } from "@/lib/api/interactions-service"
+import { ReviewSection } from "@/components/reviews/review-section"
 import dynamic from "next/dynamic"
 
 // Import BusinessMap dynamically to avoid SSR issues with Mapbox
@@ -61,15 +65,31 @@ const featureIcons: Record<string, React.ReactNode> = {
 }
 
 export function BusinessDetailModal({ business, isOpen, onClose }: BusinessDetailModalProps) {
-  const { isFavorite, toggleFavorite } = useFavorites()
+  const { isFavorite, toggleFavorite, syncing } = useFavorites()
   const { toast } = useToast()
+  const { getFormattedDistanceTo, hasLocation, loading: locationLoading } = useGeolocation()
+  const [liveDistance, setLiveDistance] = useState<string | null>(null)
   
   if (!isOpen || !business) return null
   
   const isFavorited = isFavorite(business.id)
 
-  const handleToggleFavorite = () => {
-    toggleFavorite(business.id)
+  // Track view and calculate distance when modal opens
+  useEffect(() => {
+    if (isOpen && business) {
+      // Track view
+      trackBusinessView(business.id)
+      
+      // Calculate live distance
+      if (hasLocation && business.lat && business.lng) {
+        const distance = getFormattedDistanceTo(business.lat, business.lng)
+        setLiveDistance(distance)
+      }
+    }
+  }, [isOpen, business, hasLocation, getFormattedDistanceTo])
+
+  const handleToggleFavorite = async () => {
+    await toggleFavorite(business.id)
     toast({
       title: isFavorited ? "Eliminado de favoritos" : "Agregado a favoritos",
       description: isFavorited 
@@ -241,8 +261,9 @@ export function BusinessDetailModal({ business, isOpen, onClose }: BusinessDetai
 
               {/* Tabs */}
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="info">Información</TabsTrigger>
+                  <TabsTrigger value="reviews">Reseñas</TabsTrigger>
                   <TabsTrigger value="location">Ubicación</TabsTrigger>
                 </TabsList>
 
@@ -311,10 +332,21 @@ export function BusinessDetailModal({ business, isOpen, onClose }: BusinessDetai
                       )}
                       <div className="flex items-center gap-3 text-gray-700">
                         <Navigation className="w-5 h-5 text-gray-500" />
-                        <span>{business.distance}</span>
+                        <span className={liveDistance ? "text-indigo-600 font-medium" : ""}>
+                          {liveDistance || business.distance || "Calculando..."}
+                          {liveDistance && <span className="text-xs text-gray-500 ml-1">(en tiempo real)</span>}
+                        </span>
                       </div>
                     </div>
                   </div>
+                </TabsContent>
+
+                {/* Reviews Tab */}
+                <TabsContent value="reviews" className="mt-6">
+                  <ReviewSection 
+                    businessId={business.id} 
+                    businessName={business.name} 
+                  />
                 </TabsContent>
 
                 {/* Location Tab */}
