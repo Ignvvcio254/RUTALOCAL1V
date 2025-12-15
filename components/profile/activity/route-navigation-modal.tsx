@@ -1,17 +1,14 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { 
   MapPin, Navigation, Clock, Route as RouteIcon, 
   ChevronRight, X, ExternalLink, Loader2,
-  Play, Pause, SkipForward, RotateCcw
+  RotateCcw
 } from 'lucide-react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoiaWdudmN2Y2lvMjU0IiwiYSI6ImNtNW80Y2t1cjBrNzkybXNkZDlpamR2amsifQ.L1F2oAPdkGkIDiJFA56QNw';
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoibmFjaG8yNTQiLCJhIjoiY21pdGxyZjhnMHRlYjNnb243bnA1OG81ayJ9.BPTKLir4w184eLNzsao9XQ';
 
 interface RouteStop {
   id: string;
@@ -45,12 +42,13 @@ interface RouteNavigationModalProps {
  */
 export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigationModalProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const map = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
   
+  const [mapboxgl, setMapboxgl] = useState<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [isLoadingMapbox, setIsLoadingMapbox] = useState(true);
   const [currentStopIndex, setCurrentStopIndex] = useState(0);
-  const [isNavigating, setIsNavigating] = useState(false);
   const [routeGeometry, setRouteGeometry] = useState<any>(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
 
@@ -72,6 +70,34 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
     if (!category) return "#6366f1";
     return categoryColors[category.toLowerCase()] || "#6366f1";
   };
+
+  // Cargar mapbox-gl dinámicamente
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    let isMounted = true;
+
+    const loadMapbox = async () => {
+      try {
+        const mapboxModule = await import('mapbox-gl');
+        await import('mapbox-gl/dist/mapbox-gl.css');
+        
+        if (isMounted) {
+          setMapboxgl(mapboxModule.default);
+          setIsLoadingMapbox(false);
+        }
+      } catch (error) {
+        console.error('Error loading mapbox-gl:', error);
+        setIsLoadingMapbox(false);
+      }
+    };
+
+    loadMapbox();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
 
   // Obtener ruta de Mapbox Directions API
   const fetchDirections = useCallback(async (stops: RouteStop[]) => {
@@ -106,9 +132,9 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
     return null;
   }, []);
 
-  // Inicializar mapa
+  // Inicializar mapa cuando mapboxgl esté disponible
   useEffect(() => {
-    if (!isOpen || !mapContainer.current || !route || route.stops.length === 0) return;
+    if (!isOpen || !mapboxgl || !mapContainer.current || !route || route.stops.length === 0) return;
 
     // Limpiar mapa anterior
     if (map.current) {
@@ -137,15 +163,17 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
     return () => {
       markersRef.current.forEach(m => m.remove());
       markersRef.current = [];
-      map.current?.remove();
-      map.current = null;
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
       setMapLoaded(false);
     };
-  }, [isOpen, route]);
+  }, [isOpen, mapboxgl, route]);
 
   // Dibujar ruta y marcadores cuando el mapa esté listo
   useEffect(() => {
-    if (!map.current || !mapLoaded || !route || route.stops.length === 0) return;
+    if (!map.current || !mapLoaded || !mapboxgl || !route || route.stops.length === 0) return;
 
     const drawRoute = async () => {
       // Limpiar marcadores anteriores
@@ -175,7 +203,6 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             border: 3px solid ${isCurrentStop ? '#fff' : 'rgba(255,255,255,0.8)'};
             transition: all 0.3s ease;
-            ${isCurrentStop ? 'animation: pulse 2s infinite;' : ''}
           ">
             ${index + 1}
           </div>
@@ -198,14 +225,17 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
       });
 
       // Dibujar línea de ruta
-      if (routeGeometry || directions?.geometry) {
-        const geometry = routeGeometry || directions?.geometry;
-
+      const geometry = routeGeometry || directions?.geometry;
+      if (geometry) {
         // Remover fuente anterior si existe
-        if (map.current?.getSource('route')) {
-          map.current.removeLayer('route-line');
-          map.current.removeLayer('route-line-outline');
-          map.current.removeSource('route');
+        try {
+          if (map.current?.getSource('route')) {
+            if (map.current.getLayer('route-line')) map.current.removeLayer('route-line');
+            if (map.current.getLayer('route-line-outline')) map.current.removeLayer('route-line-outline');
+            map.current.removeSource('route');
+          }
+        } catch (e) {
+          // Ignorar errores de limpieza
         }
 
         map.current?.addSource('route', {
@@ -217,20 +247,13 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
           }
         });
 
-        // Línea de contorno (más gruesa)
+        // Línea de contorno
         map.current?.addLayer({
           id: 'route-line-outline',
           type: 'line',
           source: 'route',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          paint: {
-            'line-color': '#1e3a5f',
-            'line-width': 8,
-            'line-opacity': 0.4
-          }
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: { 'line-color': '#1e3a5f', 'line-width': 8, 'line-opacity': 0.4 }
         });
 
         // Línea principal
@@ -238,14 +261,8 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
           id: 'route-line',
           type: 'line',
           source: 'route',
-          layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          paint: {
-            'line-color': '#4f46e5',
-            'line-width': 5
-          }
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: { 'line-color': '#4f46e5', 'line-width': 5 }
         });
       }
 
@@ -265,7 +282,7 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
     };
 
     drawRoute();
-  }, [mapLoaded, route, currentStopIndex, fetchDirections, routeGeometry]);
+  }, [mapLoaded, mapboxgl, route, currentStopIndex, fetchDirections, routeGeometry]);
 
   // Navegar a la siguiente parada
   const goToNextStop = () => {
@@ -326,9 +343,8 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
   // Reiniciar navegación
   const resetNavigation = () => {
     setCurrentStopIndex(0);
-    setIsNavigating(false);
     
-    if (route && route.stops.length > 0) {
+    if (route && route.stops.length > 0 && mapboxgl) {
       const bounds = new mapboxgl.LngLatBounds();
       route.stops.forEach(stop => {
         bounds.extend([stop.longitude, stop.latitude]);
@@ -342,95 +358,115 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
     }
   };
 
+  // Reset cuando se cierra
+  useEffect(() => {
+    if (!isOpen) {
+      setCurrentStopIndex(0);
+      setRouteGeometry(null);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
   const currentStop = route?.stops[currentStopIndex];
   const nextStop = route?.stops[currentStopIndex + 1];
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0 overflow-hidden">
-        <DialogHeader className="p-4 pb-2 border-b">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="flex items-center gap-2">
-                <RouteIcon className="w-5 h-5 text-indigo-600" />
-                {route?.name || 'Mi Ruta'}
-              </DialogTitle>
-              {route?.description && (
-                <p className="text-sm text-gray-500 mt-1">{route.description}</p>
-              )}
-            </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-        </DialogHeader>
-
-        <div className="flex flex-col md:flex-row h-full">
-          {/* Mapa */}
-          <div className="flex-1 relative min-h-[300px] md:min-h-0">
-            <div ref={mapContainer} className="absolute inset-0" />
-            
-            {loadingRoute && (
-              <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
-                  <span className="text-sm text-gray-600">Calculando ruta...</span>
-                </div>
-              </div>
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+        {/* Header */}
+        <div className="p-4 border-b flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <RouteIcon className="w-5 h-5 text-indigo-600" />
+              {route?.name || 'Mi Ruta'}
+            </h2>
+            {route?.description && (
+              <p className="text-sm text-gray-500 mt-1">{route.description}</p>
             )}
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
 
-            {/* Controles de navegación en el mapa */}
-            <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-72 z-10">
-              <div className="bg-white rounded-xl shadow-lg p-4">
-                {currentStop && (
-                  <div className="mb-3">
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                      <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
-                        Parada {currentStopIndex + 1} de {route?.stops.length}
-                      </span>
-                    </div>
-                    <h4 className="font-semibold text-gray-900">{currentStop.name}</h4>
-                    {currentStop.category && (
-                      <p className="text-sm text-gray-500">{currentStop.category}</p>
-                    )}
-                  </div>
-                )}
-
-                {nextStop && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded-lg">
-                    <ChevronRight className="w-4 h-4 text-indigo-500" />
-                    <span>Siguiente: <strong>{nextStop.name}</strong></span>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={goToPrevStop}
-                    disabled={currentStopIndex === 0}
-                    className="flex-1"
-                  >
-                    ← Anterior
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={resetNavigation}
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={goToNextStop}
-                    disabled={!nextStop}
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-                  >
-                    Siguiente →
-                  </Button>
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+          {/* Mapa */}
+          <div className="flex-1 relative min-h-[300px]">
+            {isLoadingMapbox ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+                  <p className="text-sm text-gray-500">Cargando mapa...</p>
                 </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <div ref={mapContainer} className="absolute inset-0" />
+                
+                {loadingRoute && (
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                      <span className="text-sm text-gray-600">Calculando ruta...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Controles de navegación en el mapa */}
+                <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-72 z-10">
+                  <div className="bg-white rounded-xl shadow-lg p-4">
+                    {currentStop && (
+                      <div className="mb-3">
+                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                          <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
+                            Parada {currentStopIndex + 1} de {route?.stops.length}
+                          </span>
+                        </div>
+                        <h4 className="font-semibold text-gray-900">{currentStop.name}</h4>
+                        {currentStop.category && (
+                          <p className="text-sm text-gray-500">{currentStop.category}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {nextStop && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded-lg">
+                        <ChevronRight className="w-4 h-4 text-indigo-500" />
+                        <span>Siguiente: <strong>{nextStop.name}</strong></span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToPrevStop}
+                        disabled={currentStopIndex === 0}
+                        className="flex-1"
+                      >
+                        ← Anterior
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={resetNavigation}
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={goToNextStop}
+                        disabled={!nextStop}
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                      >
+                        Siguiente →
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Panel lateral con paradas */}
@@ -468,9 +504,7 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
                     }`}
                   >
                     <div 
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${
-                        index === currentStopIndex ? 'bg-indigo-600' : 'bg-gray-400'
-                      }`}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
                       style={{ backgroundColor: index === currentStopIndex ? '#4f46e5' : getColor(stop.category) }}
                     >
                       {index + 1}
@@ -505,13 +539,13 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
                     <span className="text-gray-500">Total paradas</span>
                     <span className="font-medium">{route.stops.length}</span>
                   </div>
-                  {route.estimated_duration && (
+                  {route.estimated_duration && route.estimated_duration > 0 && (
                     <div className="flex items-center justify-between text-sm mt-2">
                       <span className="text-gray-500">Duración est.</span>
                       <span className="font-medium">{Math.round(route.estimated_duration / 60)} hrs</span>
                     </div>
                   )}
-                  {route.total_distance && (
+                  {route.total_distance && route.total_distance > 0 && (
                     <div className="flex items-center justify-between text-sm mt-2">
                       <span className="text-gray-500">Distancia</span>
                       <span className="font-medium">{route.total_distance.toFixed(1)} km</span>
@@ -522,15 +556,7 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
             </div>
           </div>
         </div>
-
-        {/* Estilos para animación */}
-        <style jsx global>{`
-          @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-          }
-        `}</style>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

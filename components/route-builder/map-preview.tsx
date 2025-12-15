@@ -1,13 +1,11 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { MapPin, Maximize2, Minimize2 } from "lucide-react"
+import { MapPin, Maximize2, Minimize2, Loader2 } from "lucide-react"
 import type { RouteItem } from "./route-builder-container"
-import mapboxgl from "mapbox-gl"
-import "mapbox-gl/dist/mapbox-gl.css"
 
 // Token de Mapbox
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoiaWdudmN2Y2lvMjU0IiwiYSI6ImNtNW80Y2t1cjBrNzkybXNkZDlpamR2amsifQ.L1F2oAPdkGkIDiJFA56QNw'
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoibmFjaG8yNTQiLCJhIjoiY21pdGxyZjhnMHRlYjNnb243bnA1OG81ayJ9.BPTKLir4w184eLNzsao9XQ'
 
 interface MapPreviewProps {
   items: RouteItem[]
@@ -16,23 +14,15 @@ interface MapPreviewProps {
 
 export function MapPreview({ items, title }: MapPreviewProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
-  const map = useRef<mapboxgl.Map | null>(null)
-  const markersRef = useRef<mapboxgl.Marker[]>([])
+  const map = useRef<any>(null)
+  const markersRef = useRef<any[]>([])
   const [isExpanded, setIsExpanded] = useState(false)
   const [mapLoaded, setMapLoaded] = useState(false)
+  const [mapboxgl, setMapboxgl] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Centro por defecto: Santiago, Chile
   const defaultCenter: [number, number] = [-70.6506, -33.4372]
-
-  const calculateCenter = (): [number, number] => {
-    if (items.length === 0) {
-      return defaultCenter
-    }
-
-    const avgLng = items.reduce((sum, item) => sum + item.lng, 0) / items.length
-    const avgLat = items.reduce((sum, item) => sum + item.lat, 0) / items.length
-    return [avgLng, avgLat]
-  }
 
   const categoryColors: Record<string, string> = {
     "café": "#f97316",
@@ -51,16 +41,64 @@ export function MapPreview({ items, title }: MapPreviewProps) {
     return categoryColors[category.toLowerCase()] || "#6366f1"
   }
 
-  // Inicializar mapa
+  // Cargar mapbox-gl dinámicamente
   useEffect(() => {
-    if (!mapContainer.current || map.current) return
+    let isMounted = true
+
+    const loadMapbox = async () => {
+      try {
+        const mapboxModule = await import('mapbox-gl')
+        await import('mapbox-gl/dist/mapbox-gl.css')
+        
+        if (isMounted) {
+          setMapboxgl(mapboxModule.default)
+          setIsLoading(false)
+        }
+      } catch (error) {
+        console.error('Error loading mapbox-gl:', error)
+        setIsLoading(false)
+      }
+    }
+
+    loadMapbox()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  // Calcular centro basado en items
+  const calculateCenter = (): [number, number] => {
+    if (items.length === 0) {
+      return defaultCenter
+    }
+
+    const validItems = items.filter(item => 
+      item.lng && item.lat && 
+      !isNaN(item.lng) && !isNaN(item.lat)
+    )
+
+    if (validItems.length === 0) {
+      return defaultCenter
+    }
+
+    const avgLng = validItems.reduce((sum, item) => sum + item.lng, 0) / validItems.length
+    const avgLat = validItems.reduce((sum, item) => sum + item.lat, 0) / validItems.length
+    return [avgLng, avgLat]
+  }
+
+  // Inicializar mapa cuando mapboxgl esté disponible
+  useEffect(() => {
+    if (!mapboxgl || !mapContainer.current || map.current) return
 
     mapboxgl.accessToken = MAPBOX_TOKEN
 
+    const center = calculateCenter()
+    
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
-      center: calculateCenter(),
+      center: center,
       zoom: items.length > 0 ? 13 : 12,
       attributionControl: false,
     })
@@ -71,24 +109,39 @@ export function MapPreview({ items, title }: MapPreviewProps) {
       setMapLoaded(true)
     })
 
+    map.current.on("error", (e: any) => {
+      console.error("Mapbox error:", e)
+    })
+
     return () => {
-      map.current?.remove()
-      map.current = null
+      markersRef.current.forEach(marker => marker.remove())
+      markersRef.current = []
+      if (map.current) {
+        map.current.remove()
+        map.current = null
+      }
+      setMapLoaded(false)
     }
-  }, [])
+  }, [mapboxgl])
 
   // Actualizar marcadores y ruta cuando cambian los items
   useEffect(() => {
-    if (!map.current || !mapLoaded) return
+    if (!map.current || !mapLoaded || !mapboxgl) return
 
     // Limpiar marcadores anteriores
     markersRef.current.forEach(marker => marker.remove())
     markersRef.current = []
 
     // Limpiar ruta anterior
-    if (map.current.getSource("route")) {
-      map.current.removeLayer("route-line")
-      map.current.removeSource("route")
+    try {
+      if (map.current.getSource("route")) {
+        if (map.current.getLayer("route-line")) {
+          map.current.removeLayer("route-line")
+        }
+        map.current.removeSource("route")
+      }
+    } catch (e) {
+      // Ignorar errores de limpieza
     }
 
     if (items.length === 0) {
@@ -100,8 +153,16 @@ export function MapPreview({ items, title }: MapPreviewProps) {
       return
     }
 
+    // Filtrar items con coordenadas válidas
+    const validItems = items.filter(item => 
+      item.lng && item.lat && 
+      !isNaN(item.lng) && !isNaN(item.lat)
+    )
+
+    if (validItems.length === 0) return
+
     // Agregar marcadores
-    items.forEach((item, index) => {
+    validItems.forEach((item, index) => {
       const el = document.createElement("div")
       el.className = "route-marker"
       el.innerHTML = `
@@ -141,8 +202,8 @@ export function MapPreview({ items, title }: MapPreviewProps) {
     })
 
     // Dibujar línea de ruta
-    if (items.length > 1) {
-      const coordinates = items.map(item => [item.lng, item.lat])
+    if (validItems.length > 1) {
+      const coordinates = validItems.map(item => [item.lng, item.lat])
 
       map.current.addSource("route", {
         type: "geojson",
@@ -173,9 +234,9 @@ export function MapPreview({ items, title }: MapPreviewProps) {
     }
 
     // Ajustar vista para mostrar todos los puntos
-    if (items.length > 0) {
+    if (validItems.length > 0) {
       const bounds = new mapboxgl.LngLatBounds()
-      items.forEach(item => {
+      validItems.forEach(item => {
         bounds.extend([item.lng, item.lat])
       })
       
@@ -185,7 +246,7 @@ export function MapPreview({ items, title }: MapPreviewProps) {
         duration: 1000
       })
     }
-  }, [items, mapLoaded])
+  }, [items, mapLoaded, mapboxgl])
 
   return (
     <div className={`h-full flex flex-col bg-gray-100 relative ${isExpanded ? 'fixed inset-0 z-50' : ''}`}>
@@ -206,17 +267,28 @@ export function MapPreview({ items, title }: MapPreviewProps) {
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 relative">
-        <div ref={mapContainer} className="absolute inset-0" />
-
-        {/* Placeholder when empty */}
-        {items.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80 z-10">
-            <div className="text-center">
-              <MapPin size={48} className="text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-500 text-sm">Agrega lugares para ver la ruta</p>
+      <div className="flex-1 relative min-h-[300px]">
+        {isLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+              <p className="text-sm text-gray-500">Cargando mapa...</p>
             </div>
           </div>
+        ) : (
+          <>
+            <div ref={mapContainer} className="absolute inset-0" />
+
+            {/* Placeholder when empty */}
+            {items.length === 0 && !isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100/80 z-10">
+                <div className="text-center">
+                  <MapPin size={48} className="text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">Agrega lugares para ver la ruta</p>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
