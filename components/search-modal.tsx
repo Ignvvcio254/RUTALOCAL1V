@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
-import { Search, X, TrendingUp, Clock, MapPin } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Search, X, TrendingUp, Clock, MapPin, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { mockBusinesses } from "@/lib/data/mock-businesses"
+import { useBusinessSearch } from "@/hooks/use-businesses"
 import { NegocioCard } from "./negocio-card"
 
 interface SearchModalProps {
@@ -14,6 +14,9 @@ interface SearchModalProps {
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [recentSearches, setRecentSearches] = useState<string[]>([])
+
+  // Obtener resultados de búsqueda desde la API real
+  const { businesses: searchResults, loading: searchLoading } = useBusinessSearch(searchQuery)
 
   // Cargar búsquedas recientes del localStorage
   useEffect(() => {
@@ -30,20 +33,6 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     setRecentSearches(updated)
     localStorage.setItem('recent-searches', JSON.stringify(updated))
   }
-
-  // Filtrar negocios por búsqueda
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return []
-
-    const query = searchQuery.toLowerCase()
-    return mockBusinesses.filter(
-      (b) =>
-        b.name.toLowerCase().includes(query) ||
-        b.description.toLowerCase().includes(query) ||
-        b.subcategory.toLowerCase().includes(query) ||
-        b.category.toLowerCase().includes(query)
-    ).slice(0, 10)
-  }, [searchQuery])
 
   const trendingSearches = [
     "Cafés con WiFi",
@@ -206,7 +195,12 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   </div>
                 ) : (
                   <div className="p-4">
-                    {searchResults.length > 0 ? (
+                    {searchLoading ? (
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-3" />
+                        <p className="text-sm text-gray-600">Buscando negocios...</p>
+                      </div>
+                    ) : searchResults.length > 0 ? (
                       <div className="space-y-4">
                         <p className="text-sm text-gray-600 mb-4">
                           {searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''} para "{searchQuery}"

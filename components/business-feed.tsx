@@ -2,25 +2,76 @@
 
 import { useState, useMemo } from 'react'
 import { useFilters } from '@/contexts/filter-context'
-import { mockBusinesses } from '@/lib/data/mock-businesses'
+import { useAllBusinesses } from '@/hooks/use-businesses'
 import { filterAndSortBusinesses } from '@/lib/filters/filter-utils'
 import { NegocioCard } from './negocio-card'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import { Button } from './ui/button'
 
 export function BusinessFeed() {
   const { filters } = useFilters()
   const [visibleCount, setVisibleCount] = useState(9)
 
+  // Obtener negocios de la API real
+  const { businesses: apiBusinesses, loading, error, refetch } = useAllBusinesses()
+
   // Filtrar y ordenar negocios
   const filteredBusinesses = useMemo(() => {
-    return filterAndSortBusinesses(mockBusinesses, filters)
-  }, [filters])
+    if (apiBusinesses.length === 0) {
+      return []
+    }
+    return filterAndSortBusinesses(apiBusinesses, filters)
+  }, [apiBusinesses, filters])
 
   const visibleBusinesses = filteredBusinesses.slice(0, visibleCount)
   const hasMore = visibleCount < filteredBusinesses.length
 
   const loadMore = () => {
     setVisibleCount((prev) => Math.min(prev + 9, filteredBusinesses.length))
+  }
+
+  // Estado de carga
+  if (loading) {
+    return (
+      <section className="px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Cargando negocios...
+            </h3>
+            <p className="text-gray-600">
+              Obteniendo los mejores locales de RutaLocal
+            </p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  // Estado de error
+  if (error) {
+    return (
+      <section className="px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="p-4 bg-red-100 rounded-full mb-4">
+              <AlertCircle className="w-12 h-12 text-red-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Error al cargar negocios
+            </h3>
+            <p className="text-gray-600 max-w-md mb-6">
+              No se pudieron cargar los negocios. Por favor, intenta nuevamente.
+            </p>
+            <Button onClick={() => refetch()} variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Reintentar
+            </Button>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   return (

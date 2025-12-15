@@ -7,7 +7,8 @@ import "leaflet.markercluster/dist/MarkerCluster.css"
 import "leaflet.markercluster/dist/MarkerCluster.Default.css"
 import MarkerClusterGroup from "react-leaflet-cluster"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
-import { MOCK_BUSINESSES, type Business } from "@/lib/mock-data"
+import { useAllBusinesses } from "@/hooks/use-businesses"
+import type { Business } from "@/lib/filters/filter-utils"
 
 interface MapComponentProps {
   center: { lat: number; lng: number }
@@ -27,9 +28,14 @@ const MapComponent = forwardRef<L.Map, MapComponentProps>(
   ({ center, zoom, selectedBusiness, onSelectBusiness, filters }, ref) => {
     const [markers, setMarkers] = useState<Business[]>([])
 
+    // Obtener negocios de la API real
+    const { businesses: apiBusinesses, loading } = useAllBusinesses()
+
     useEffect(() => {
+      if (apiBusinesses.length === 0) return
+
       // Filter businesses based on criteria
-      const filtered = MOCK_BUSINESSES.filter((business) => {
+      const filtered = apiBusinesses.filter((business) => {
         if (filters.category !== "todos" && business.category !== filters.category) return false
         if (business.rating < filters.rating) return false
         if (business.priceRange > filters.priceRange) return false
@@ -37,7 +43,7 @@ const MapComponent = forwardRef<L.Map, MapComponentProps>(
         return true
       })
       setMarkers(filtered)
-    }, [filters])
+    }, [apiBusinesses, filters])
 
     const getCategoryColor = (category: string) => {
       const colors: Record<string, string> = {
@@ -86,7 +92,7 @@ const MapComponent = forwardRef<L.Map, MapComponentProps>(
           {markers.map((business) => (
             <Marker
               key={business.id}
-              position={[business.lat, business.lng]}
+              position={[business.coordinates[0], business.coordinates[1]]}
               icon={createCustomIcon(business.category, selectedBusiness === business.id)}
               eventHandlers={{
                 click: () => {
@@ -97,7 +103,11 @@ const MapComponent = forwardRef<L.Map, MapComponentProps>(
               <Popup>
                 <div className="p-2">
                   <h3 className="font-semibold">{business.name}</h3>
-                  <p className="text-sm text-muted-foreground">{business.distance}km away</p>
+                  <p className="text-sm text-muted-foreground">
+                    {business.distance >= 1000
+                      ? `${(business.distance / 1000).toFixed(1)}km`
+                      : `${business.distance}m`} de ti
+                  </p>
                 </div>
               </Popup>
             </Marker>
