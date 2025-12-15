@@ -128,17 +128,17 @@ export async function markReviewHelpful(reviewId: string) {
 // ==================== VISITS (not views) ====================
 
 /**
- * Track a business visit
- * Backend endpoint is /visit/ not /view/
+ * Track a business profile view (anonymous - no auth)
+ * Backend endpoint: /businesses/{id}/track-view/
  */
 export async function trackBusinessView(businessId: string): Promise<void> {
   try {
-    await fetch(`${API_URL}/businesses/${businessId}/visit/`, {
+    await fetch(`${API_URL}/businesses/${businessId}/track-view/`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: { 'Content-Type': 'application/json' },
     })
   } catch {
-    // Silent fail - visit tracking is not critical
+    // Silent fail
   }
 }
 
@@ -156,4 +156,44 @@ export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2
 
 export function formatDistance(meters: number): string {
   return meters < 1000 ? `${Math.round(meters)}m` : `${(meters / 1000).toFixed(1)}km`
+}
+
+// ==================== ANALYTICS ====================
+
+export interface DailyActivity {
+  date: string
+  day: string
+  views: number
+  likes: number
+  reviews: number
+}
+
+export interface AnalyticsData {
+  daily_activity: DailyActivity[]
+  rating_distribution: Record<string, number>
+  totals: {
+    views: number
+    favorites: number
+    reviews: number
+    rating: number
+  }
+}
+
+/**
+ * Get real analytics data for business dashboard
+ */
+export async function getBusinessAnalytics(businessId: string): Promise<AnalyticsData | null> {
+  try {
+    const response = await fetch(
+      `${API_URL}/businesses/owner/my-businesses/${businessId}/analytics/`,
+      { headers: getAuthHeaders() }
+    )
+
+    if (!response.ok) return null
+
+    const data = await response.json()
+    return data.data
+  } catch {
+    return null
+  }
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { getBusinessById } from "@/lib/api/requests";
+import { getBusinessAnalytics, type AnalyticsData, type DailyActivity } from "@/lib/api/interactions-service";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,6 +28,7 @@ import {
   ThumbsUp,
   Calendar,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import {
   LineChart,
@@ -62,55 +64,27 @@ interface DashboardData {
   recent_reviews: Review[];
 }
 
-// Generate mock chart data based on real stats
-function generateChartData(totalViews: number) {
-  const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-  const avgPerDay = Math.ceil(totalViews / 7);
-  return days.map((day, i) => ({
-    day,
-    views: Math.max(0, avgPerDay + Math.floor(Math.random() * avgPerDay * 0.5) - avgPerDay * 0.25),
-    likes: Math.floor(Math.random() * 5),
-  }));
-}
-
-function generateRatingDistribution(totalReviews: number, avgRating: number) {
-  if (totalReviews === 0) return [
-    { stars: 5, count: 0, percentage: 0 },
-    { stars: 4, count: 0, percentage: 0 },
-    { stars: 3, count: 0, percentage: 0 },
-    { stars: 2, count: 0, percentage: 0 },
-    { stars: 1, count: 0, percentage: 0 },
-  ];
-  
-  // Distribute reviews based on average rating
-  const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  const peak = Math.round(avgRating);
-  
-  distribution[peak as keyof typeof distribution] = Math.ceil(totalReviews * 0.6);
-  distribution[Math.max(1, peak - 1) as keyof typeof distribution] = Math.ceil(totalReviews * 0.25);
-  distribution[Math.min(5, peak + 1) as keyof typeof distribution] = Math.ceil(totalReviews * 0.1);
-  distribution[Math.max(1, peak - 2) as keyof typeof distribution] = Math.ceil(totalReviews * 0.05);
-  
-  return [5, 4, 3, 2, 1].map(stars => ({
-    stars,
-    count: distribution[stars as keyof typeof distribution],
-    percentage: totalReviews > 0 ? (distribution[stars as keyof typeof distribution] / totalReviews) * 100 : 0,
-  }));
-}
-
 export default function BusinessDashboard() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const businessId = params.id as string;
-        const data = await getBusinessById(businessId);
+        
+        // Fetch dashboard data and analytics in parallel
+        const [data, analyticsData] = await Promise.all([
+          getBusinessById(businessId),
+          getBusinessAnalytics(businessId)
+        ]);
+        
         setDashboardData(data);
+        setAnalytics(analyticsData);
       } catch (error) {
         console.error("❌ Error:", error);
       } finally {
@@ -126,6 +100,18 @@ export default function BusinessDashboard() {
   const business = dashboardData?.business;
   const stats = dashboardData?.stats;
   const reviews = dashboardData?.recent_reviews || [];
+  
+  // Use real analytics data or fallback to empty
+  const chartData = analytics?.daily_activity || [];
+  const ratingDistribution = analytics?.rating_distribution 
+    ? [5, 4, 3, 2, 1].map(stars => ({
+        stars,
+        count: analytics.rating_distribution[String(stars)] || 0,
+        percentage: stats?.review_count 
+          ? ((analytics.rating_distribution[String(stars)] || 0) / stats.review_count) * 100 
+          : 0,
+      }))
+    : [5, 4, 3, 2, 1].map(stars => ({ stars, count: 0, percentage: 0 }));
 
   if (loading) {
     return (
@@ -148,9 +134,6 @@ export default function BusinessDashboard() {
       </div>
     );
   }
-
-  const chartData = generateChartData(stats?.views || 0);
-  const ratingDistribution = generateRatingDistribution(stats?.review_count || 0, stats?.rating || 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -318,21 +301,31 @@ export default function BusinessDashboard() {
                     <CardDescription>Vistas y engagement de tu negocio</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                          <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
-                          <YAxis stroke="#9ca3af" fontSize={12} />
-                          <Tooltip 
-                            contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
-                            labelStyle={{ fontWeight: 'bold' }}
-                          />
-                          <Bar dataKey="views" fill="#4F46E5" radius={[4, 4, 0, 0]} name="Vistas" />
-                          <Bar dataKey="likes" fill="#EC4899" radius={[4, 4, 0, 0]} name="Me gusta" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+                    {chartData.length > 0 ? (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis dataKey="day" stroke="#9ca3af" fontSize={12} />
+                            <YAxis stroke="#9ca3af" fontSize={12} />
+                            <Tooltip 
+                              contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                              labelStyle={{ fontWeight: 'bold' }}
+                            />
+                            <Bar dataKey="views" fill="#4F46E5" radius={[4, 4, 0, 0]} name="Vistas" />
+                            <Bar dataKey="likes" fill="#EC4899" radius={[4, 4, 0, 0]} name="Me gusta" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="h-64 flex items-center justify-center text-center text-gray-500">
+                        <div>
+                          <Eye className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                          <p className="font-medium">Sin datos de actividad aún</p>
+                          <p className="text-sm">Los datos aparecerán cuando los usuarios visiten tu negocio</p>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
