@@ -67,26 +67,28 @@ const featureIcons: Record<string, React.ReactNode> = {
 export function BusinessDetailModal({ business, isOpen, onClose }: BusinessDetailModalProps) {
   const { isFavorite, toggleFavorite, syncing } = useFavorites()
   const { toast } = useToast()
-  const { getFormattedDistanceTo, hasLocation, loading: locationLoading } = useGeolocation()
+  const { getFormattedDistanceTo, hasLocation } = useGeolocation()
   const [liveDistance, setLiveDistance] = useState<string | null>(null)
+
+  // Calculate distance when location available - MUST be before any return
+  useEffect(() => {
+    if (isOpen && business?.lat && business?.lng && hasLocation) {
+      const distance = getFormattedDistanceTo(business.lat, business.lng)
+      if (distance) setLiveDistance(distance)
+    }
+  }, [isOpen, business?.lat, business?.lng, hasLocation, getFormattedDistanceTo])
+
+  // Track view when modal opens
+  useEffect(() => {
+    if (isOpen && business?.id) {
+      trackBusinessView(business.id).catch(() => {})
+    }
+  }, [isOpen, business?.id])
   
+  // Early return AFTER all hooks
   if (!isOpen || !business) return null
   
   const isFavorited = isFavorite(business.id)
-
-  // Track view and calculate distance when modal opens
-  useEffect(() => {
-    if (isOpen && business) {
-      // Track view
-      trackBusinessView(business.id)
-      
-      // Calculate live distance
-      if (hasLocation && business.lat && business.lng) {
-        const distance = getFormattedDistanceTo(business.lat, business.lng)
-        setLiveDistance(distance)
-      }
-    }
-  }, [isOpen, business, hasLocation, getFormattedDistanceTo])
 
   const handleToggleFavorite = async () => {
     await toggleFavorite(business.id)
