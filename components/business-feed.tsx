@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useFilters } from '@/contexts/filter-context'
 import { useAllBusinesses } from '@/hooks/use-businesses'
+import { useGeolocation } from '@/hooks/use-geolocation'
 import { filterAndSortBusinesses } from '@/lib/filters/filter-utils'
 import { NegocioCard } from './negocio-card'
 import { BusinessDetailModal, type BusinessDetail } from './business-detail-modal'
@@ -17,6 +18,9 @@ export function BusinessFeed() {
 
   // Obtener negocios de la API real
   const { businesses: apiBusinesses, loading, error, refetch } = useAllBusinesses()
+  
+  // Obtener ubicación del usuario para calcular distancia
+  const { getFormattedDistanceTo, hasLocation } = useGeolocation()
 
   // Filtrar y ordenar negocios
   const filteredBusinesses = useMemo(() => {
@@ -135,24 +139,32 @@ export function BusinessFeed() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {visibleBusinesses.map((business) => (
-                <NegocioCard
-                  key={business.id}
-                  id={business.id}
-                  name={business.name}
-                  category={business.subcategory.toUpperCase() as any}
-                  rating={business.rating}
-                  reviews={business.reviews}
-                  distance={`${business.distance >= 1000 ? `${(business.distance / 1000).toFixed(1)}km` : `${business.distance}m`} de ti`}
-                  description={business.description}
-                  priceRange={business.priceRange}
-                  isOpen={business.isOpen}
-                  image={business.image}
-                  hasOffer={business.hasOffer}
-                  isVerified={business.isVerified}
-                  onClick={() => handleBusinessClick(business)}
-                />
-              ))}
+              {visibleBusinesses.map((business) => {
+                // Calcular distancia real si tenemos ubicación
+                const realDistance = hasLocation && business.coordinates 
+                  ? getFormattedDistanceTo(business.coordinates[0], business.coordinates[1])
+                  : '';
+                const displayDistance = realDistance || 'Ubicación no disponible';
+                
+                return (
+                  <NegocioCard
+                    key={business.id}
+                    id={business.id}
+                    name={business.name}
+                    category={business.subcategory.toUpperCase() as any}
+                    rating={business.rating}
+                    reviews={business.reviews}
+                    distance={`${displayDistance} de ti`}
+                    description={business.description}
+                    priceRange={business.priceRange}
+                    isOpen={business.isOpen}
+                    image={business.image}
+                    hasOffer={business.hasOffer}
+                    isVerified={business.isVerified}
+                    onClick={() => handleBusinessClick(business)}
+                  />
+                );
+              })}
             </div>
 
             {/* Business Detail Modal */}
