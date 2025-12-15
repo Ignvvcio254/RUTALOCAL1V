@@ -189,7 +189,7 @@ export function ReviewSection({ businessId, businessName }: ReviewSectionProps) 
                     <span className="text-xs text-gray-400">{new Date(review.created_at).toLocaleDateString('es-CL')}</span>
                   </div>
                   {renderStars(review.rating)}
-                  <p className="mt-2 text-gray-700">{review.content}</p>
+                  <p className="mt-2 text-gray-700">{(review as any).comment || review.content}</p>
                   <button onClick={() => handleMarkHelpful(review.id)} className="mt-2 flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-600 transition-colors">
                     <ThumbsUp className="w-4 h-4" /><span>Útil ({review.helpful_count})</span>
                   </button>
