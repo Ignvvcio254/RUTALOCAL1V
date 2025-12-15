@@ -71,6 +71,11 @@ export function MapPreview({ items, title }: MapPreviewProps) {
   useEffect(() => {
     if (!mapContainer.current || map.current) return
 
+    console.log('🗺️ [MapPreview] Initializing map...')
+    console.log('🗺️ [MapPreview] Container exists:', !!mapContainer.current)
+    console.log('🗺️ [MapPreview] Token length:', MAPBOX_TOKEN?.length || 0)
+    console.log('🗺️ [MapPreview] Items count:', items.length)
+
     // Configurar token
     mapboxgl.accessToken = MAPBOX_TOKEN
 
@@ -89,6 +94,8 @@ export function MapPreview({ items, title }: MapPreviewProps) {
 
       map.current.on("load", () => {
         console.log('🗺️ [MapPreview] Map loaded successfully')
+        console.log('🗺️ [MapPreview] Container dimensions:', mapContainer.current?.offsetWidth, 'x', mapContainer.current?.offsetHeight)
+        console.log('🗺️ [MapPreview] Token valid:', !!MAPBOX_TOKEN && MAPBOX_TOKEN.length > 20)
         setMapLoaded(true)
         setIsLoading(false)
       })

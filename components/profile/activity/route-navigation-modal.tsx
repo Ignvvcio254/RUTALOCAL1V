@@ -108,6 +108,13 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
 
   // Inicializar mapa cuando se abre el modal
   useEffect(() => {
+    console.log('🗺️ [RouteNavigationModal] Effect triggered:', {
+      isOpen,
+      hasContainer: !!mapContainer.current,
+      hasRoute: !!route,
+      stopsCount: route?.stops?.length || 0
+    });
+
     if (!isOpen || !mapContainer.current || !route || route.stops.length === 0) return;
 
     // Limpiar mapa anterior si existe
@@ -117,6 +124,8 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
     }
 
     setIsLoadingMap(true);
+    
+    console.log('🗺️ [RouteNavigationModal] Setting up map with token length:', MAPBOX_TOKEN?.length || 0);
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
     const firstStop = route.stops[0];
@@ -134,6 +143,7 @@ export function RouteNavigationModal({ isOpen, onClose, route }: RouteNavigation
 
       map.current.on('load', () => {
         console.log('🗺️ [RouteNavigationModal] Map loaded');
+        console.log('🗺️ [RouteNavigationModal] Container size:', mapContainer.current?.offsetWidth, 'x', mapContainer.current?.offsetHeight);
         setMapLoaded(true);
         setIsLoadingMap(false);
       });
