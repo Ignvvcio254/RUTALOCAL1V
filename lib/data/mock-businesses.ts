@@ -201,7 +201,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['outdoor', 'exercise', 'scenic'],
     experienceTags: ['aventura', 'naturaleza', 'miradores'],
     coordinates: [-33.4260, -70.6340],
-    image: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=85&fit=crop',
     description: 'Senderismo guiado al mirador con vistas 360° de Santiago',
   },
   {
@@ -220,7 +220,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['cultural', 'educational', 'free-entry'],
     experienceTags: ['museos', 'historia'],
     coordinates: [-33.4410, -70.6840],
-    image: 'https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=800',
+    image: 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=1200&q=85&fit=crop',
     description: 'Museo dedicado a la memoria histórica de Chile',
   },
   {
@@ -239,7 +239,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['viewpoint', 'photography', 'tickets'],
     experienceTags: ['miradores'],
     coordinates: [-33.4172, -70.6067],
-    image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800',
+    image: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1200&q=85&fit=crop',
     description: 'El mirador más alto de Sudamérica en el piso 62',
   },
 
@@ -260,7 +260,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['indigenous-cuisine', 'fine-dining', 'reservations'],
     experienceTags: ['tradicional'],
     coordinates: [-33.4320, -70.6520],
-    image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800',
+    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&q=85&fit=crop',
     description: 'Alta cocina ancestral de pueblos originarios de Chile',
   },
   {
@@ -279,7 +279,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['luxury', 'spa', 'rooftop-pool', 'restaurant'],
     experienceTags: ['boutique'],
     coordinates: [-33.4140, -70.6050],
-    image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800',
+    image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=1200&q=85&fit=crop',
     description: 'Hotel 5 estrellas con piscina en la azotea y spa de lujo',
   },
   {
@@ -298,7 +298,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['water-sports', 'equipment-included', 'guide'],
     experienceTags: ['aventura', 'naturaleza'],
     coordinates: [-33.4380, -70.6450],
-    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
+    image: 'https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=1200&q=85&fit=crop',
     description: 'Aventura en kayak por el río Mapocho urbano',
   },
   {
@@ -317,7 +317,7 @@ export const mockBusinesses: Business[] = [
     attributes: ['market', 'seafood', 'traditional'],
     experienceTags: ['mariscos', 'tradicional', 'street-food'],
     coordinates: [-33.4370, -70.6510],
-    image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800',
+    image: 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=1200&q=85&fit=crop',
     description: 'Mercado histórico con pescados y mariscos frescos',
   },
 ]
