@@ -15,8 +15,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [recentSearches, setRecentSearches] = useState<string[]>([])
 
-  // Obtener resultados de búsqueda desde la API real
-  const { businesses: searchResults, loading: searchLoading } = useBusinessSearch(searchQuery)
+  // Obtener resultados de búsqueda desde la API real con debouncing
+  const { businesses: searchResults, loading: searchLoading } = useBusinessSearch(searchQuery, 300)
 
   // Cargar búsquedas recientes del localStorage
   useEffect(() => {

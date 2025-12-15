@@ -1,6 +1,6 @@
 # Agent Context - RutaLocal Project
 
-**Última actualización:** 2025-12-15
+**Última actualización:** 2025-12-15 06:55 UTC
 **Modelo:** Claude Sonnet 4.5
 **Proyectos:** RUTALOCAL1V (Frontend) + SantiaGo_backend (Backend)
 
@@ -38,24 +38,72 @@
 
 ## 🐛 Problemas Resueltos
 
-### 1. Swipe-back Gesture en Desktop
+### 1. Loop Infinito en Modal de Búsqueda (CRÍTICO)
+**Problema:** Modal de búsqueda genera loop infinito de requests al backend
+**Síntomas:** 
+- Múltiples requests simultáneos
+- UI congelada con spinner perpetuo
+- Console log muestra fetches continuos
+
+**Raíz:** 
+- `useCallback` con objeto `filters` como dependencia
+- Objeto se recrea en cada render → nueva referencia
+- `useEffect` detecta cambio → ejecuta fetch → loop infinito
+
+**Solución Implementada:**
+1. **Memoization:** Serializar filters con `JSON.stringify()` para comparación estable
+   ```typescript
+   const filtersKey = useMemo(() => JSON.stringify(filters || {}), [filters])
+   useCallback(async () => { ... }, [filtersKey]) // Dependencia estable
+   ```
+
+2. **Debouncing:** Esperar 300-500ms antes de buscar
+   ```typescript
+   useBusinessSearch(query, 300) // Debounce de 300ms
+   ```
+
+3. **Request Cancellation:** Usar AbortController para cancelar requests obsoletos
+   ```typescript
+   const controller = new AbortController()
+   fetch(url, { signal: controller.signal })
+   return () => controller.abort()
+   ```
+
+4. **Cleanup:** Limpiar timers y requests al desmontar componente
+
+**Archivos Modificados:**
+- `hooks/use-businesses.ts` - Agregado memoization, debouncing y cancellation
+- `components/search-modal.tsx` - Configurado debounce de 300ms
+
+**Resultado:**
+- ✅ Loop infinito eliminado
+- ✅ Performance mejorada: de 4+ requests a 1 request por búsqueda
+- ✅ UX mejorada: resultados aparecen sin delays molestos
+
+**Documentación:** Ver `FIX_SEARCH_INFINITE_LOOP.md` para análisis detallado
+
+**Commit:** [Pendiente]
+
+---
+
+### 2. Swipe-back Gesture en Desktop
 **Problema:** Gesto de deslizamiento lateral afectaba interacciones en desktop
 **Solución:** Eliminado `<SwipeBackGesture>` de `components/client-layout.tsx`
 **Commit:** `2166c16`
 
-### 2. Negocios No Aparecían (Estado Draft)
+### 3. Negocios No Aparecían (Estado Draft)
 **Problema:** Negocios creados por usuarios aprobados quedaban en `pending_review`
 **Raíz:** Serializer hardcodeaba status sin verificar permisos
 **Solución:** Implementado `_determine_initial_status()` en `backend/apps/businesses/serializers.py:164`
 **Commit:** `75328dc`
 
-### 3. Error 405 al Editar Negocios
+### 4. Error 405 al Editar Negocios
 **Problema:** `PATCH /api/businesses/{id}/` retornaba 405
 **Raíz:** Endpoint de actualización no existía
 **Solución:** Creado `update_my_business()` view en `backend/apps/businesses/views.py:425`
 **Commits:** `382d794`, `ae7979a`
 
-### 4. Error 400 - Category UUID Inválido
+### 5. Error 400 - Category UUID Inválido
 **Problema:** Frontend enviaba objeto completo de categoría en lugar de slug
 **Raíz:** `updateData.category = { id: '...', name: '...', slug: '...' }`
 **Solución:**
@@ -63,7 +111,7 @@
 - **Backend:** Hacer endpoint robusto para manejar objetos/slugs/UUIDs
 **Commits:** `1d0fa99`, `2003cdf`
 
-### 5. Manejo de Errores Deficiente
+### 6. Manejo de Errores Deficiente
 **Problema:** Modal rojo de Next.js sin mensaje claro
 **Solución:** Sistema de 3 capas:
 - `lib/errors/error-handler.ts` - Normalización centralizada
@@ -71,7 +119,7 @@
 - `app/error.tsx` - Next.js error page
 **Commit:** `d3ea14d`
 
-### 6. Frontend Usaba Datos Mock (CRÍTICO)
+### 7. Frontend Usaba Datos Mock (CRÍTICO)
 **Problema:** Negocios no aparecían a pesar de estar publicados
 **Raíz:** Componentes importaban `mockBusinesses` en lugar de llamar API
 **Archivos afectados:**

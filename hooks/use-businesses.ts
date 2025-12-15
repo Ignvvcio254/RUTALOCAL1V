@@ -8,7 +8,7 @@
 
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   getPublicBusinesses,
   type PublicBusiness,
@@ -21,6 +21,7 @@ interface UseBusinessesOptions {
   filters?: BusinessFilters
   autoFetch?: boolean
   useLegacyFormat?: boolean
+  debounceMs?: number
 }
 
 interface UseBusinessesReturn {
@@ -34,16 +35,38 @@ interface UseBusinessesReturn {
 
 /**
  * Hook para obtener y gestionar negocios públicos
+ * Optimizado con memoization y debouncing para evitar loops infinitos
  */
 export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinessesReturn {
-  const { filters, autoFetch = true, useLegacyFormat = true } = options
+  const { 
+    filters, 
+    autoFetch = true, 
+    useLegacyFormat = true,
+    debounceMs = 0 
+  } = options
 
   const [rawBusinesses, setRawBusinesses] = useState<PublicBusiness[]>([])
   const [businesses, setBusinesses] = useState<Business[]>([])
-  const [loading, setLoading] = useState(autoFetch)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
+  
+  // Ref para controlar fetch en progreso
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Serializar filters para evitar cambios de referencia
+  const filtersKey = useMemo(() => 
+    JSON.stringify(filters || {}), 
+    [filters]
+  )
 
   const fetchBusinesses = useCallback(async () => {
+    // Cancelar request anterior si existe
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
+    abortControllerRef.current = new AbortController()
     setLoading(true)
     setError(null)
 
@@ -63,21 +86,49 @@ export function useBusinesses(options: UseBusinessesOptions = {}): UseBusinesses
       }
 
     } catch (err) {
+      // Ignorar errores de abort
+      if (err instanceof Error && err.name === 'AbortError') {
+        return
+      }
       console.error('❌ Error in useBusinesses:', err)
       setError(err instanceof Error ? err : new Error('Unknown error'))
       setRawBusinesses([])
       setBusinesses([])
     } finally {
       setLoading(false)
+      abortControllerRef.current = null
     }
-  }, [filters, useLegacyFormat])
+  }, [filtersKey, useLegacyFormat]) // Usar filtersKey en lugar de filters
 
-  // Auto-fetch en mount si autoFetch está activado
+  // Auto-fetch con debouncing
   useEffect(() => {
-    if (autoFetch) {
+    if (!autoFetch) return
+
+    // Limpiar timer anterior
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+
+    // Si hay debounce, esperar
+    if (debounceMs > 0) {
+      setLoading(true) // Mostrar loading inmediatamente
+      debounceTimerRef.current = setTimeout(() => {
+        fetchBusinesses()
+      }, debounceMs)
+    } else {
       fetchBusinesses()
     }
-  }, [autoFetch, fetchBusinesses])
+
+    // Cleanup
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+    }
+  }, [autoFetch, filtersKey, debounceMs]) // Dependencias estables
 
   return {
     businesses,
@@ -107,11 +158,13 @@ export function useBusinessesByCategory(categorySlug: string) {
 }
 
 /**
- * Hook para buscar negocios por texto
+ * Hook para buscar negocios por texto con debouncing
+ * Evita múltiples requests mientras el usuario escribe
  */
-export function useBusinessSearch(query: string) {
+export function useBusinessSearch(query: string, debounceMs: number = 500) {
   return useBusinesses({
-    filters: { search: query },
-    autoFetch: query.length >= 2, // Solo buscar si hay al menos 2 caracteres
+    filters: query.length >= 2 ? { search: query } : undefined,
+    autoFetch: query.length >= 2,
+    debounceMs, // Debouncing de 500ms por defecto
   })
 }

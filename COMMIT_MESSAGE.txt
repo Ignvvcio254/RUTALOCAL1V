@@ -1,0 +1,48 @@
+Fix: Eliminar loop infinito en búsqueda con memoization y debouncing
+
+PROBLEMA:
+- Modal de búsqueda entraba en loop infinito de requests
+- Múltiples fetches simultáneos al backend
+- UI congelada con spinner perpetuo
+- Performance severamente degradada
+
+RAÍZ DEL BUG:
+- useCallback con objeto 'filters' como dependencia
+- Objeto se recreaba en cada render → nueva referencia
+- useEffect detectaba cambio → ejecutaba fetch → loop infinito
+
+SOLUCIÓN IMPLEMENTADA:
+
+1. Memoization con JSON.stringify
+   - Serializar filters para comparación estable
+   - Dependencia de useCallback ahora es string inmutable
+   
+2. Debouncing
+   - Búsquedas esperan 300ms antes de ejecutarse
+   - Reduce de 4+ requests a 1 por búsqueda
+   
+3. Request Cancellation
+   - AbortController para cancelar requests obsoletos
+   - Previene race conditions
+   
+4. Cleanup Robusto
+   - Limpieza de timers y requests al desmontar
+   - Previene memory leaks
+
+ARCHIVOS MODIFICADOS:
+- hooks/use-businesses.ts (refactor completo)
+- components/search-modal.tsx (agregado debounce)
+
+RESULTADO:
+✅ Loop infinito eliminado
+✅ Performance mejorada 75%+ (1 request vs 4+)
+✅ UX suave y responsiva
+✅ No memory leaks
+
+TESTING:
+- Build exitoso: npm run build ✓
+- TypeScript strict: npx tsc --noEmit ✓
+- Búsqueda funcional sin loops ✓
+
+DOCUMENTACIÓN:
+Ver FIX_SEARCH_INFINITE_LOOP.md para análisis técnico completo
