@@ -1,11 +1,15 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useRef } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { ActivityData } from '@/lib/profile';
-import { Heart, Star, Share2, MapPin, Route } from 'lucide-react';
+import { Heart, Star, Share2, MapPin, Route, ChevronRight, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { RouteNavigationModal } from './route-navigation-modal';
+import { TokenManager } from '@/lib/auth/token-manager';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://web-production-f3cae.up.railway.app';
 
 interface ActivityTimelineProps {
   activities: ActivityData[];
@@ -37,6 +41,71 @@ const activityLabels: Record<string, string> = {
 
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
   const parentRef = useRef<HTMLDivElement>(null);
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+  const [routeData, setRouteData] = useState<any>(null);
+  const [loadingRouteId, setLoadingRouteId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Cargar detalles de una ruta
+  const loadRouteDetails = useCallback(async (routeId: string) => {
+    setLoadingRouteId(routeId);
+    
+    try {
+      const token = TokenManager.getAccessToken();
+      const response = await fetch(`${API_URL}/api/routes/${routeId}/`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al cargar la ruta');
+      }
+
+      const data = await response.json();
+      const route = data.data || data;
+
+      // Transformar datos de paradas
+      const formattedRoute = {
+        id: route.id,
+        name: route.name,
+        description: route.description,
+        total_distance: route.total_distance,
+        estimated_duration: route.estimated_duration,
+        stops: (route.stops || []).map((stop: any, index: number) => ({
+          id: stop.id || `stop-${index}`,
+          name: stop.business?.name || stop.name || `Parada ${index + 1}`,
+          category: stop.business?.category || '',
+          latitude: stop.business?.latitude || stop.latitude || 0,
+          longitude: stop.business?.longitude || stop.longitude || 0,
+          duration: stop.duration || 30,
+          order: stop.order || index + 1,
+          cover_image: stop.business?.cover_image
+        }))
+      };
+
+      setRouteData(formattedRoute);
+      setSelectedRouteId(routeId);
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Error loading route details:', error);
+    } finally {
+      setLoadingRouteId(null);
+    }
+  }, []);
+
+  const handleActivityClick = (activity: ActivityData) => {
+    if (activity.type === 'route' && activity.routeId) {
+      loadRouteDetails(activity.routeId);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedRouteId(null);
+    setRouteData(null);
+  };
 
   const rowVirtualizer = useVirtualizer({
     count: activities.length,
@@ -94,9 +163,18 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                 transform: `translateY(${virtualItem.start}px)`,
               }}
             >
-              <div className="flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
+              <div 
+                className={`flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors ${
+                  activity.type === 'route' ? 'cursor-pointer hover:bg-indigo-50' : ''
+                }`}
+                onClick={() => handleActivityClick(activity)}
+              >
                 <div className={`p-2 rounded-lg ${colorClass} flex-shrink-0`}>
-                  <Icon className="w-5 h-5" />
+                  {loadingRouteId === activity.routeId ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Icon className="w-5 h-5" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-900">
@@ -104,8 +182,10 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                     <span className="font-semibold">{displayName || 'Sin nombre'}</span>
                   </p>
                   {activity.type === 'route' && stopsCount && (
-                    <p className="text-xs text-indigo-600 mt-0.5">
+                    <p className="text-xs text-indigo-600 mt-0.5 flex items-center gap-1">
                       {stopsCount} paradas
+                      <ChevronRight className="w-3 h-3" />
+                      <span className="text-gray-400">Click para ver ruta</span>
                     </p>
                   )}
                   {activity.type === 'review' && activity.metadata?.rating && (
@@ -130,6 +210,13 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
           );
         })}
       </div>
+
+      {/* Modal de navegación de ruta */}
+      <RouteNavigationModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        route={routeData}
+      />
     </div>
   );
 }
