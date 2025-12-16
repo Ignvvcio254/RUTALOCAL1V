@@ -22,9 +22,11 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">RG</span>
-            </div>
+            <img 
+              src="/RGOlogo.png" 
+              alt="RutaGo" 
+              className="w-9 h-9 rounded-lg object-cover"
+            />
             <span className="font-bold text-gray-900 text-lg">RutaGo</span>
           </Link>
 
